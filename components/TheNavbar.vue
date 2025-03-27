@@ -4,7 +4,7 @@
       <!-- Logo section - left side -->
       <div class="logo-container">
         <NuxtLink to="/">
-          <img class="imglogo" src="../public/images/Logo/logo-05.png" alt="Confetti and Carousel Logo">
+          <img class="imglogo" src="../public/images/Logo/LOGO-05.png" alt="Confetti and Carousel Logo">
           <img class="textlogo" src="../public/images/Logo/LOGO-03.png" alt="Confetti and Carousel">
         </NuxtLink>
       </div>
