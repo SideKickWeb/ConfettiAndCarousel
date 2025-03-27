@@ -15,22 +15,11 @@ export default defineNuxtConfig({
     },
   },
   vite: {
-    optimizeDeps: {
-      exclude: ['bcryptjs', 'jsonwebtoken']
-    },
-    build: {
-      rollupOptions: {
-        external: ['@prisma/client']
+    vue: {
+      script: {
+        defineModel: true,
+        propsDestructure: true
       }
-    }
-  },
-  nitro: {
-    experimental: {
-      openAPI: true
-    },
-    // Specify server-only packages
-    externals: {
-      inline: ['uuid']
     }
   },
   runtimeConfig: {
