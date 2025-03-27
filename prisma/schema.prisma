@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id          String   @id
+  email       String   @unique
+  firstName   String
+  lastName    String
+  password    String
+  role        String
+  accessLevel String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+}
+
+model Customer {
+  id        String   @id
+  email     String   @unique
+  firstName String
+  lastName  String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Event     Event[]
+  Order     Order[]
+}
+
+model Event {
+  id              String         @id
+  title           String
+  description     String?
+  location        String?
+  startDate       DateTime
+  endDate         DateTime
+  customerId      String?
+  status          String         @default("requested")
+  staffNotes      String?
+  paymentDetails  String?
+  invoiceId       String?
+  assignedStaffId String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime
+  Customer        Customer?      @relation(fields: [customerId], references: [id])
+  EventProduct    EventProduct[]
+}
+
+model EventProduct {
+  id        String   @id
+  eventId   String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Event     Event    @relation(fields: [eventId], references: [id])
+  Product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([eventId, productId])
+}
+
+model HeroSetting {
+  id           String   @id
+  imageUrl     String
+  title        String
+  description  String
+  buttonText   String   @default("Learn More")
+  buttonLink   String   @default("/contact")
+  textPosition String   @default("left")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+}
+
+model Order {
+  id          String   @id
+  customerId  String
+  items       Json
+  totalAmount Float
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  Customer    Customer @relation(fields: [customerId], references: [id])
+}
+
+model Product {
+  id              String           @id
+  name            String
+  description     String?
+  price           Float
+  imageUrl        String?
+  active          Boolean          @default(true)
+  categoryId      String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime
+  EventProduct    EventProduct[]
+  ProductCategory ProductCategory? @relation(fields: [categoryId], references: [id])
+}
+
+model StaffInvitation {
+  id          String    @id
+  email       String
+  firstName   String
+  lastName    String
+  role        String
+  accessLevel String
+  token       String    @unique
+  used        Boolean   @default(false)
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+}
+
+model ProductCategory {
+  id          String    @id
+  name        String
+  description String?
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  Product     Product[]
+}
