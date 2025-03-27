@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npx prisma generate && nuxt build",
+    "build": "prisma generate && nuxt build",
     "dev": "nuxt dev",
-    "generate": "npxprisma generate && nuxt generate",
+    "generate": "prisma generate && nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare && npx prisma generate",
+    "postinstall": "nuxt prepare && prisma generate",
     "migrate": "prisma migrate dev",
     "prisma:seed": "node prisma/seed.cjs"
   },
