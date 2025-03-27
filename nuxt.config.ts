@@ -20,6 +20,18 @@ export default defineNuxtConfig({
         defineModel: true,
         propsDestructure: true
       }
+    },
+    build: {
+      rollupOptions: {
+        external: ['bcryptjs', 'crypto', '@prisma/client', '.prisma/client']
+      }
+    },
+    optimizeDeps: {
+      exclude: ['bcryptjs', 'jsonwebtoken', '@prisma/client']
+    },
+    ssr: {
+      noExternal: ['bcryptjs', 'jsonwebtoken'],
+      external: ['@prisma/client']
     }
   },
   runtimeConfig: {
@@ -27,6 +39,16 @@ export default defineNuxtConfig({
     public: {
       apiBase: process.env.API_BASE || ''
     }
+  },
+  nitro: {
+    externals: {
+      inline: ['uuid']
+    },
+    moduleSideEffects: [
+      '@prisma/client',
+      'bcryptjs',
+      'jsonwebtoken'
+    ]
   },
   app: {
     head: {
