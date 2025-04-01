@@ -21,8 +21,8 @@ export default defineNuxtConfig({
         propsDestructure: true
       }
     },
-    ssr: {
-      noExternal: ['@prisma/client']
+    optimizeDeps: {
+      exclude: ['@prisma/client']
     }
   },
   runtimeConfig: {
@@ -36,9 +36,6 @@ export default defineNuxtConfig({
     externals: {
       inline: ['@prisma/client']
     }
-  },
-  build: {
-    transpile: ['@prisma/client']
   },
   app: {
     head: {
