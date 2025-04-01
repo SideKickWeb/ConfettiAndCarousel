@@ -37,6 +37,9 @@ export default defineNuxtConfig({
       inline: ['@prisma/client']
     }
   },
+  build: {
+    transpile: ['@prisma/client']
+  },
   app: {
     head: {
       title: 'My Nuxt Website',
