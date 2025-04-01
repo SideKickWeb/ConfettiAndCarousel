@@ -20,6 +20,9 @@ export default defineNuxtConfig({
         defineModel: true,
         propsDestructure: true
       }
+    },
+    optimizeDeps: {
+      exclude: ['@prisma/client']
     }
   },
   runtimeConfig: {
