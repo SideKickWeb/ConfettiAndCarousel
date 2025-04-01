@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { enabled: process.env.NODE_ENV !== 'production' },
   components: true,
   css: [
     '~/assets/css/main.css',
@@ -32,6 +32,7 @@ export default defineNuxtConfig({
     }
   },
   nitro: {
+    preset: 'vercel',
     externals: {
       inline: ['@prisma/client']
     }

@@ -7,7 +7,8 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "prisma generate"
+    "vercel-build": "NODE_OPTIONS='--max-old-space-size=4096' nuxt build",
+    "postinstall": "node ./scripts/fix-prisma-url.js && node ./scripts/postinstall.js"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.5.1",
