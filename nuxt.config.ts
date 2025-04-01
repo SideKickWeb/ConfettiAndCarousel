@@ -20,11 +20,6 @@ export default defineNuxtConfig({
         defineModel: true,
         propsDestructure: true
       }
-    },
-    build: {
-      rollupOptions: {
-        external: ['@prisma/client']
-      }
     }
   },
   runtimeConfig: {
