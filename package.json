@@ -7,8 +7,7 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
-    "vercel-build": "SKIP_DB_INIT=true prisma generate --no-engine && nuxt build"
+    "postinstall": "nuxt prepare && npx prisma generate --no-engine"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.5.1",

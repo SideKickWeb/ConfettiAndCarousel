@@ -1,5 +1,7 @@
+import { PrismaClient } from '@prisma/client'
 import { randomUUID } from 'crypto'
-import prisma from '../utils/prisma'
+
+const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
   try {
@@ -59,5 +61,7 @@ export default defineEventHandler(async (event) => {
       buttonLink: '/products',
       textPosition: 'left'
     }
+  } finally {
+    await prisma.$disconnect()
   }
 }) 

@@ -28,14 +28,6 @@ export default defineNuxtConfig({
       apiBase: process.env.API_BASE || ''
     }
   },
-  nitro: {
-    prerender: {
-      // Disable prerendering to avoid database access during build
-      ignore: ['/**'],
-    },
-    // For Vercel deployment
-    preset: process.env.VERCEL ? 'vercel' : 'node-server'
-  },
   app: {
     head: {
       title: 'My Nuxt Website',

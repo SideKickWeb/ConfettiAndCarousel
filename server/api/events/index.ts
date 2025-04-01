@@ -1,5 +1,7 @@
+import { PrismaClient } from '@prisma/client'
 import { randomUUID } from 'crypto'
-import prisma from '../../utils/prisma'
+
+const prisma = new PrismaClient()
 
 export default defineEventHandler(async (eventHandler) => {
   const method = getMethod(eventHandler)
