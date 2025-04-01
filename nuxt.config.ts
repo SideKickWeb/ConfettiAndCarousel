@@ -23,7 +23,7 @@ export default defineNuxtConfig({
     },
     optimizeDeps: {
       exclude: ['@prisma/client']
-    }
+    },
   },
   runtimeConfig: {
     jwtSecret: process.env.JWT_SECRET || 'development-secret-key',
