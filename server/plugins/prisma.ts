@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client'
+// Import the singleton prisma instance instead of creating a new one
+import prisma from '../../lib/prisma'
 import { defineNitroPlugin } from 'nitropack/runtime'
-
-// Create a singleton Prisma instance
-const prisma = new PrismaClient()
 
 export default defineNitroPlugin(async () => {
   // Connect to the database when the server starts

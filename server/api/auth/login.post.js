@@ -1,9 +1,6 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../../../lib/prisma'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-
-// Create a new PrismaClient instance
-const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
   try {

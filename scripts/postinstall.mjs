@@ -10,12 +10,26 @@ function runPostinstall() {
     // Ensure we're in the project root
     process.chdir(path.join(__dirname, '..'));
 
+    const isVercel = process.env.VERCEL === '1';
+    const isProd = process.env.NODE_ENV === 'production';
+
     // Generate Prisma client
     console.log('Generating Prisma client...');
-    execSync('npx prisma generate', { stdio: 'inherit' });
+    
+    // In Vercel, we need to set specific environment variables
+    if (isVercel) {
+      console.log('Running in Vercel environment');
+      execSync('PRISMA_CLIENT_ENGINE_TYPE=binary npx prisma generate', { 
+        stdio: 'inherit',
+        env: { ...process.env, PRISMA_CLIENT_ENGINE_TYPE: 'binary' }
+      });
+    } else {
+      execSync('npx prisma generate', { stdio: 'inherit' });
+    }
 
     // Push schema changes if needed
-    if (process.env.NODE_ENV === 'production') {
+    if (isProd && !isVercel) {
+      // Don't run DB push on Vercel build - only when explicitly needed
       console.log('Pushing Prisma schema changes...');
       execSync('npx prisma db push', { stdio: 'inherit' });
     }
