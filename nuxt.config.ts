@@ -38,7 +38,10 @@ export default defineNuxtConfig({
     }
   },
   build: {
-    transpile: ['@prisma/client']
+    transpile: ['@prisma/client'],
+    rollupOptions: {
+      external: ['@prisma/client']
+    }
   },
   app: {
     head: {
