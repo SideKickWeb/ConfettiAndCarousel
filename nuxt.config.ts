@@ -20,9 +20,6 @@ export default defineNuxtConfig({
         defineModel: true,
         propsDestructure: true
       }
-    },
-    optimizeDeps: {
-      exclude: ['@prisma/client']
     }
   },
   runtimeConfig: {
@@ -35,12 +32,6 @@ export default defineNuxtConfig({
     preset: 'vercel',
     externals: {
       inline: ['@prisma/client']
-    }
-  },
-  build: {
-    transpile: ['@prisma/client'],
-    rollupOptions: {
-      external: ['@prisma/client']
     }
   },
   app: {
