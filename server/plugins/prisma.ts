@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@prisma/client/.prisma/client'
 import { defineNitroPlugin } from 'nitropack/runtime'
 
 // Create a singleton Prisma instance
