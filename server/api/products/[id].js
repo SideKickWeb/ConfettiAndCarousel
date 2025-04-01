@@ -18,12 +18,7 @@ export default defineEventHandler(async (event) => {
         id: productId
       },
       include: {
-        ProductCategory: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
+        ProductCategory: true
       }
     });
 

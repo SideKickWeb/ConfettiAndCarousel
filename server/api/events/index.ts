@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { randomUUID } from 'crypto'
+import prisma from '../../utils/prisma'
 
 export default defineEventHandler(async (eventHandler) => {
   const method = getMethod(eventHandler)
@@ -10,13 +9,7 @@ export default defineEventHandler(async (eventHandler) => {
     try {
       const events = await prisma.event.findMany({
         include: {
-          client: true,
-          staffAssigned: {
-            include: {
-              staff: true
-            }
-          },
-          tasks: true
+          Customer: true
         }
       })
       return events
@@ -36,19 +29,19 @@ export default defineEventHandler(async (eventHandler) => {
       
       const newEvent = await prisma.event.create({
         data: {
-          clientId: body.clientId,
-          eventName: body.eventName,
-          eventType: body.eventType,
-          eventDate: new Date(body.eventDate),
-          startTime: body.startTime ? new Date(body.startTime) : null,
-          endTime: body.endTime ? new Date(body.endTime) : null,
-          venue: body.venue,
-          venueAddress: body.venueAddress,
-          expectedGuests: body.expectedGuests,
-          status: body.status || 'Requested'
+          id: body.id || randomUUID(),
+          customerId: body.customerId,
+          title: body.eventName || body.title,
+          description: body.eventType || body.description,
+          location: body.venue || body.venueAddress || body.location,
+          startDate: new Date(body.eventDate || body.startDate || body.startTime),
+          endDate: new Date(body.endTime || body.endDate || body.eventDate),
+          status: body.status || 'requested',
+          staffNotes: body.notes || body.staffNotes,
+          updatedAt: new Date()
         },
         include: {
-          client: true
+          Customer: true
         }
       })
       

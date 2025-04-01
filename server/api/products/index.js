@@ -25,12 +25,7 @@ export default defineEventHandler(async (event) => {
       const products = await prisma.product.findMany({
         where: whereClause,
         include: {
-          ProductCategory: {
-            select: {
-              id: true,
-              name: true
-            }
-          }
+          ProductCategory: true
         },
         orderBy: {
           name: 'asc'
@@ -45,7 +40,6 @@ export default defineEventHandler(async (event) => {
         price: product.price,
         image: product.imageUrl,
         categoryId: product.categoryId,
-        category: product.categoryId, // For backward compatibility
         categoryName: product.ProductCategory?.name || null
       }))
       
@@ -57,7 +51,7 @@ export default defineEventHandler(async (event) => {
         'Cache-Control': 'no-cache, no-store, must-revalidate'
       })
       
-      // Return products as stringified JSON
+      // Return products as JSON
       return {
         success: true,
         data: formattedProducts,

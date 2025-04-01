@@ -1,9 +1,6 @@
-import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-
-// Create a new PrismaClient instance
-const prisma = new PrismaClient()
+import prisma from '../../utils/prisma'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -75,7 +72,5 @@ export default defineEventHandler(async (event) => {
       statusCode: 500,
       message: 'Internal server error'
     })
-  } finally {
-    await prisma.$disconnect()
   }
 }) 

@@ -1,4 +1,5 @@
 import { defineEventHandler } from 'h3'
+import prisma from '../utils/prisma'
 
 // Instagram API configuration
 const INSTAGRAM_ACCESS_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN
