@@ -33,12 +33,15 @@ export default defineEventHandler(async (event) => {
 
     // Return account data (excluding password)
     return {
-      id: account.id,
-      email: account.email,
-      firstName: account.firstName,
-      lastName: account.lastName,
-      role: account.role,
-      accessLevel: account.accessLevel
+      success: true,
+      data: {
+        id: account.id,
+        email: account.email,
+        firstName: account.firstName,
+        lastName: account.lastName,
+        role: account.role,
+        accessLevel: account.accessLevel
+      }
     }
   } catch (error) {
     console.error('Error verifying token:', error)
