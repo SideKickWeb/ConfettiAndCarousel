@@ -20,12 +20,20 @@ export default defineNuxtConfig({
         defineModel: true,
         propsDestructure: true
       }
+    },
+    optimizeDeps: {
+      exclude: ['@prisma/client']
     }
   },
   runtimeConfig: {
     jwtSecret: process.env.JWT_SECRET || 'development-secret-key',
     public: {
       apiBase: process.env.API_BASE || ''
+    }
+  },
+  nitro: {
+    externals: {
+      inline: ['@prisma/client']
     }
   },
   app: {
