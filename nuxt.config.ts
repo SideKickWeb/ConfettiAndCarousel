@@ -20,6 +20,9 @@ export default defineNuxtConfig({
         defineModel: true,
         propsDestructure: true
       }
+    },
+    ssr: {
+      noExternal: ['@prisma/client']
     }
   },
   runtimeConfig: {

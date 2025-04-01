@@ -7,7 +7,7 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "vercel-build": "prisma generate && NITRO_PRESET=vercel NODE_ENV=production nuxt build",
+    "vercel-build": "prisma generate && NITRO_PRESET=vercel NODE_ENV=production NUXT_PUBLIC_API_BASE=/api nuxt build",
     "postinstall": "prisma generate"
   },
   "dependencies": {
