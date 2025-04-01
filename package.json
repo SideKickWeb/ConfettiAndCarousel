@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "prisma generate && cross-env NITRO_PRESET=vercel NODE_ENV=production nuxt build",
+    "build": "prisma generate && cross-env PRISMA_CLIENT_ENGINE_TYPE=binary NITRO_PRESET=vercel NODE_ENV=production nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "vercel-build": "prisma generate && cross-env NODE_ENV=production NUXT_PUBLIC_API_BASE=/api NITRO_PRESET=vercel nuxt build",
+    "vercel-build": "prisma generate && cross-env PRISMA_CLIENT_ENGINE_TYPE=binary NODE_ENV=production NUXT_PUBLIC_API_BASE=/api NITRO_PRESET=vercel nuxt build",
     "postinstall": "prisma generate"
   },
   "dependencies": {
