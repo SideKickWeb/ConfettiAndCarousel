@@ -21,6 +21,17 @@ export default defineNuxtConfig({
         propsDestructure: true
       }
     },
+    optimizeDeps: {
+      exclude: ['@prisma/client']
+    },
+    build: {
+      rollupOptions: {
+        external: ['@prisma/client']
+      }
+    },
+    ssr: {
+      noExternal: true
+    }
   },
   nitro: {
     esbuild: {
