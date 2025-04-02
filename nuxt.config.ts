@@ -35,6 +35,35 @@ export default defineNuxtConfig({
       options: {
         target: 'es2019'
       }
+    },
+    // Add serverless configuration
+    preset: 'vercel',
+    // Increase function timeout for Vercel
+    vercel: {
+      functionMemory: 1024, // 1 GB (max for hobby plan)
+      functions: {
+        // Increase timeout for the main index page
+        'server/routes/**': {
+          memory: 1024, // 1GB
+        }
+      }
+    },
+    // These options help optimize your application for serverless environments
+    experimental: {
+      asyncContext: true,
+    },
+    timing: true,
+    storage: {
+      redis: {
+        driver: 'redis',
+        /* Redis connection options */
+        url: process.env.REDIS_URL
+      }
+    },
+    devStorage: {
+      redis: {
+        driver: 'memory'
+      }
     }
   },
   typescript: {
