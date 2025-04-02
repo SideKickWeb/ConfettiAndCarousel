@@ -3,12 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node ./scripts/fix-prisma-url.mjs && prisma generate && cross-env PRISMA_CLIENT_ENGINE_TYPE=binary NITRO_PRESET=vercel NODE_ENV=production nuxt build",
+    "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "vercel-build": "node ./scripts/fix-prisma-url.mjs && prisma generate && cross-env PRISMA_CLIENT_ENGINE_TYPE=binary NODE_ENV=production NUXT_PUBLIC_API_BASE=/api NITRO_PRESET=vercel nuxt build",
-    "postinstall": "node ./scripts/fix-prisma-url.mjs && node ./scripts/postinstall.mjs"
+    "postinstall": "nuxt prepare && npx prisma generate"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.5.1",
