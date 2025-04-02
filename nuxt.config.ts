@@ -37,7 +37,7 @@ export default defineNuxtConfig({
       }
     },
     // Add serverless configuration
-    preset: 'vercel',
+    preset: 'vercel-edge',
     // Increase function timeout for Vercel
     vercel: {
       functionMemory: 1024, // 1 GB (max for hobby plan)
@@ -46,7 +46,9 @@ export default defineNuxtConfig({
         'server/api/**': {
           memory: 1024, // 1GB
         }
-      }
+      },
+      // Add direct configuration for Node.js dependency resolution
+      buildCommand: 'npm run vercel-build'
     },
     // These options help optimize your application for serverless environments
     experimental: {
@@ -103,6 +105,10 @@ export default defineNuxtConfig({
           maxAge: 60 * 10 // 10 minutes
         }
       }
+    },
+    // Add explicit dependency resolution
+    externals: {
+      inline: ['ufo']
     }
   },
   typescript: {
