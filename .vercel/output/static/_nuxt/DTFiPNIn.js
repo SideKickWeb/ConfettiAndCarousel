@@ -1,0 +1,1 @@
+import{_ as a,a as s}from"./BvGU_pER.js";import{_,c as r,b as t,a as n,o as m}from"./DPqVHIb4.js";import"./CtFe8zgF.js";import"./BY4aLptK.js";const p={},i={class:"container"};function l(d,o){const e=a,c=s;return m(),r("div",i,[t(e),o[0]||(o[0]=n("main",{class:"content"},[n("h1",null,"Contact")],-1)),t(c)])}const B=_(p,[["render",l]]);export{B as default};
