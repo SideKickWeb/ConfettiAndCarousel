@@ -21,20 +21,22 @@ export default defineNuxtConfig({
         propsDestructure: true
       }
     },
-    optimizeDeps: {
-      exclude: ['@prisma/client']
+  },
+  nitro: {
+    esbuild: {
+      options: {
+        target: 'es2019'
+      }
     },
+    prerender: {
+      crawlLinks: false,
+      routes: ['/'],
+    }
   },
   runtimeConfig: {
     jwtSecret: process.env.JWT_SECRET || 'development-secret-key',
     public: {
       apiBase: process.env.API_BASE || ''
-    }
-  },
-  nitro: {
-    preset: 'vercel',
-    externals: {
-      inline: ['@prisma/client']
     }
   },
   app: {
