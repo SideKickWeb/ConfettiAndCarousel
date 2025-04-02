@@ -1,33 +1,34 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client";
+import { defineEventHandler } from "h3";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 export default defineEventHandler(async (event) => {
   try {
     // Manually defined categories
     const categories = [
       {
-        id: 'balloon-displays',
-        label: 'Balloon Displays',
-        value: 'balloon-displays'
+        id: "balloon-displays",
+        label: "Balloon Displays",
+        value: "balloon-displays",
       },
       {
-        id: 'event-decorations',
-        label: 'Event Decorations',
-        value: 'event-decorations'
-      }
-    ]
-    
+        id: "event-decorations",
+        label: "Event Decorations",
+        value: "event-decorations",
+      },
+    ];
+
     return {
       success: true,
-      data: categories
-    }
+      data: categories,
+    };
   } catch (error) {
-    console.error('Error fetching categories:', error)
+    console.error("Error fetching categories:", error);
     return {
       success: false,
-      message: 'Failed to fetch categories',
-      error: error.message
-    }
+      message: "Failed to fetch categories",
+      error: error.message,
+    };
   }
-}) 
+});
