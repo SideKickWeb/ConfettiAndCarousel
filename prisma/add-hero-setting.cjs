@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const { randomUUID } = require('crypto');
+import { PrismaClient } from '@prisma/client';
+import { randomUUID } from 'crypto';
 
 async function main() {
   const prisma = new PrismaClient();
