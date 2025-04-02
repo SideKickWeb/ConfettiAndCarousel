@@ -1,1 +1,0 @@
-import{c as s}from"./Bn4Q-SNH.js";import"./gnU0ypJ3.js";async function r(t,e){if(t.method!=="POST")return e.status(405).json({message:"Method not allowed"});e.setHeader("Set-Cookie",s.serialize("token","",{httpOnly:!0,secure:!0,expires:new Date(0),sameSite:"strict",path:"/"})),e.status(200).json({message:"Logged out successfully"})}export{r as default};

@@ -26,5 +26,6 @@ logs
 node_modules/
 .nuxt/
 .output/
+.vercel/
 .env
 .DS_Store
