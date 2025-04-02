@@ -42,8 +42,8 @@ export default defineNuxtConfig({
     vercel: {
       functionMemory: 1024, // 1 GB (max for hobby plan)
       functions: {
-        // Increase timeout for the main index page
-        'server/routes/**': {
+        // Increase timeout for all API routes
+        'server/api/**': {
           memory: 1024, // 1GB
         }
       }
@@ -63,6 +63,45 @@ export default defineNuxtConfig({
     devStorage: {
       redis: {
         driver: 'memory'
+      }
+    },
+    // Optimize for serverless
+    minify: true,
+    compressPublicAssets: {
+      gzip: true,
+      brotli: true
+    },
+    // Configure API routes to use ISR (Incremental Static Regeneration)
+    routeRules: {
+      '/api/hero': { 
+        swr: 60 * 15, // 15 minutes
+        cache: {
+          maxAge: 60 * 5 // 5 minutes
+        }
+      },
+      '/api/products': { 
+        swr: 60 * 60, // 1 hour
+        cache: {
+          maxAge: 60 * 10 // 10 minutes
+        }
+      },
+      '/api/products/categories': { 
+        swr: 60 * 60 * 3, // 3 hours
+        cache: {
+          maxAge: 60 * 30 // 30 minutes
+        }
+      },
+      '/api/instagram': { 
+        swr: 60 * 60 * 2, // 2 hours
+        cache: {
+          maxAge: 60 * 30 // 30 minutes
+        }
+      },
+      '/api/products/**': {
+        swr: 60 * 60, // 1 hour
+        cache: {
+          maxAge: 60 * 10 // 10 minutes
+        }
       }
     }
   },
@@ -95,7 +134,25 @@ export default defineNuxtConfig({
       style: [],
       script: [],
       noscript: []
-    }
+    },
+    // Configure build optimization for the app
+    buildAssetsDir: '/_nuxt/',
+    cdnURL: '',
+  },
+  // Performance optimization
+  experimental: {
+    payloadExtraction: true,
+    treeshakeClientOnly: true,
+    componentIslands: false,
+    renderJsonPayloads: true,
+  },
+  routeRules: {
+    // Rules for client-facing routes
+    '/': { swr: 60 * 5 }, // 5 minutes
+    '/products': { swr: 60 * 30 }, // 30 minutes
+    '/product/**': { swr: 60 * 60 }, // 1 hour
+    '/gallery': { swr: 60 * 60 }, // 1 hour
+    '/services': { swr: 60 * 60 * 12 }, // 12 hours
   },
   compatibilityDate: '2024-11-01'
 })

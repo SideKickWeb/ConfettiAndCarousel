@@ -1,11 +1,13 @@
-import { PrismaClient } from '@prisma/client'
-import { defineEventHandler } from 'h3'
-
-const prisma = new PrismaClient()
+import { defineEventHandler, setResponseHeaders } from 'h3'
 
 // Instagram API configuration
 const INSTAGRAM_ACCESS_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN
 const INSTAGRAM_USER_ID = process.env.INSTAGRAM_USER_ID
+
+// Cache for Instagram data to avoid repeated fetches
+let cachedInstagramData: any = null
+let cacheTimestamp: number = 0
+const CACHE_DURATION_MS = 3600000 // 1 hour
 
 // Helper function to sanitize caption text and handle emojis properly
 const sanitizeText = (text: string | null): string => {
@@ -47,10 +49,29 @@ const processCaption = (text: string | null): { title: string, description: stri
 
 export default defineEventHandler(async (event) => {
   try {
+    // Check if we have valid cached data
+    const now = Date.now()
+    if (cachedInstagramData && (now - cacheTimestamp) < CACHE_DURATION_MS) {
+      console.log('Returning cached Instagram data');
+      
+      // Set response headers with caching info
+      setResponseHeaders(event, {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=900, s-maxage=1800'
+      });
+      
+      return {
+        success: true,
+        data: cachedInstagramData,
+        fromCache: true
+      }
+    }
+    
     if (!INSTAGRAM_ACCESS_TOKEN || !INSTAGRAM_USER_ID) {
       throw new Error('Instagram credentials not configured')
     }
 
+    console.log('Fetching fresh Instagram data');
     let allPosts: any[] = [];
     let nextPageUrl = `https://graph.instagram.com/v12.0/${INSTAGRAM_USER_ID}/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username&access_token=${INSTAGRAM_ACCESS_TOKEN}&limit=25`;
 
@@ -87,12 +108,28 @@ export default defineEventHandler(async (event) => {
       })
       .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()); // Sort by newest first
 
+    // Update cache
+    cachedInstagramData = galleryItems;
+    cacheTimestamp = now;
+
+    // Set response headers with caching directives
+    setResponseHeaders(event, {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=900, s-maxage=1800'
+    });
+
     return {
       success: true,
       data: galleryItems
     }
   } catch (error) {
     console.error('Instagram API Error:', error)
+    
+    // Set response headers
+    setResponseHeaders(event, {
+      'Content-Type': 'application/json'
+    });
+    
     return {
       success: false,
       error: 'Failed to fetch Instagram posts'
