@@ -28,9 +28,6 @@ export default defineNuxtConfig({
       rollupOptions: {
         external: ['@prisma/client']
       }
-    },
-    ssr: {
-      noExternal: true
     }
   },
   nitro: {
@@ -38,10 +35,16 @@ export default defineNuxtConfig({
       options: {
         target: 'es2019'
       }
-    },
-    prerender: {
-      crawlLinks: false,
-      routes: ['/'],
+    }
+  },
+  typescript: {
+    tsConfig: {
+      compilerOptions: {
+        moduleResolution: "Node16",
+        strict: true,
+        target: "ESNext",
+        module: "ESNext"
+      }
     }
   },
   runtimeConfig: {
