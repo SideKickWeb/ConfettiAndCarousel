@@ -199,8 +199,8 @@ onMounted(() => {
 
 .gallery-header {
   text-align: center;
-  padding: 4rem 0;
-  background: var(--service-card-bg);
+  padding: 6rem 0;
+  background: linear-gradient(135deg, var(--service-card-bg) 0%, var(--bg-primary) 100%);
   margin-bottom: 3rem;
   position: relative;
   width: 100vw;
@@ -218,8 +218,17 @@ onMounted(() => {
 
 .gallery-header h1 {
   color: var(--accent-primary);
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: 3.5rem;
+  margin-bottom: 1.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.gallery-header p {
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
 }
 
 .gallery-grid {
@@ -235,31 +244,41 @@ onMounted(() => {
 .gallery-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-  margin-bottom: 2rem;
+  gap: 2.5rem;
+  margin-bottom: 2.5rem;
   width: 100%;
   box-sizing: border-box;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gallery-row.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .gallery-card-wrapper {
   aspect-ratio: 4/5;
   width: 100%;
+  position: relative;
 }
 
 .gallery-card {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 20px var(--shadow-color);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 30px var(--shadow-color);
   border: 1px solid var(--border-color);
+  background: var(--card-bg);
 }
 
 .gallery-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 24px var(--shadow-color);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px var(--shadow-color);
 }
 
 .gallery-card-container {
@@ -273,85 +292,62 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   display: block;
 }
 
 .gallery-card:hover img {
-  transform: scale(1.05);
-}
-
-.gallery-caption {
-  font-size: 1rem;
-  color: white;
-  line-height: 1.5;
-  max-height: 150px;
-  overflow-y: auto;
-  word-break: break-word;
-  padding-right: 10px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent-primary, #b8860b) rgba(0, 0, 0, 0.2);
-}
-
-/* Custom scrollbar for WebKit browsers */
-.gallery-caption::-webkit-scrollbar {
-  width: 6px;
-}
-
-.gallery-caption::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 10px;
-}
-
-.gallery-caption::-webkit-scrollbar-thumb {
-  background: var(--accent-primary, #b8860b);
-  border-radius: 10px;
-}
-
-.gallery-caption::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-secondary, #daa520);
+  transform: scale(1.08);
 }
 
 .gallery-card-content {
-  padding: 1.5rem;
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(0, 0, 0, 0.8);
+  padding: 2rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.4));
   color: white;
   opacity: 0;
-  transition: opacity 0.3s ease;
-  transform: translateY(0);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  transform: translateY(20px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   text-align: left;
   max-height: 70%;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 .gallery-card:hover .gallery-card-content {
   opacity: 1;
+  transform: translateY(0);
+}
+
+.gallery-caption {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .load-more-button {
   display: block;
-  margin: 3rem auto;
-  padding: 1rem 2.5rem;
+  margin: 4rem auto;
+  padding: 1.2rem 3rem;
   background: var(--button-gradient);
   color: var(--button-text);
   border: none;
-  border-radius: 25px;
-  font-size: 1rem;
-  font-weight: 500;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px var(--shadow-color);
 }
 
 .load-more-button:hover {
   background: var(--button-hover);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px var(--shadow-color);
 }
 
 .animate-section {
@@ -368,16 +364,26 @@ onMounted(() => {
 @media (max-width: 1024px) {
   .gallery-row {
     grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
   }
 }
 
 @media (max-width: 768px) {
-  .gallery-row {
-    grid-template-columns: 1fr;
+  .gallery-header {
+    padding: 4rem 0;
   }
 
-  .gallery-header {
-    padding: 3rem 1rem;
+  .gallery-header h1 {
+    font-size: 2.5rem;
+  }
+
+  .gallery-header p {
+    font-size: 1.1rem;
+  }
+
+  .gallery-row {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
   .gallery-grid {
@@ -386,10 +392,12 @@ onMounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-section {
+  .gallery-row,
+  .gallery-card,
+  .gallery-card-content,
+  .load-more-button {
     transition: none;
     transform: none;
-    opacity: 1;
   }
 }
 </style> 
