@@ -13,8 +13,9 @@ export default defineNuxtConfig({
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3000'
     }
   },
-  // Nitro server configuration
+  // Nitro configuration for Vercel
   nitro: {
+    preset: 'vercel',
     experimental: {
       wasm: true
     },
@@ -23,8 +24,12 @@ export default defineNuxtConfig({
         target: 'es2020'
       }
     },
+    // Comprehensive externals for Prisma
     externals: {
       inline: ['@prisma/client']
+    },
+    rollupConfig: {
+      external: ['@prisma/client', '.prisma/client', '.prisma', 'prisma']
     }
   },
   // Server-side rendering options
@@ -68,9 +73,22 @@ export default defineNuxtConfig({
     },
     resolve: {
       alias: {
-        '@prisma/client/index-browser': '@prisma/client'
+        '.prisma/client/index-browser': '.prisma/client/index.js'
       }
-    }
+    },
+    optimizeDeps: {
+      exclude: ['@prisma/client', '.prisma/client']
+    },
+    plugins: [
+      {
+        name: 'prisma-client-externalize',
+        resolveId(id) {
+          if (id === '@prisma/client' || id.includes('.prisma/client')) {
+            return { id, external: true }
+          }
+        }
+      }
+    ]
   },
   compatibilityDate: '2024-11-01'
 })
