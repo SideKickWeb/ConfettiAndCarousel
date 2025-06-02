@@ -1,12 +1,4 @@
 {
-  "functions": {
-    "server/api/**/*.js": {
-      "maxDuration": 10
-    },
-    "server/api/**/*.ts": {
-      "maxDuration": 10
-    }
-  },
   "buildCommand": "npm run build",
   "env": {
     "PRISMA_CLI_BINARY_TARGETS": "rhel-openssl-1.0.x,native,linux-musl"
