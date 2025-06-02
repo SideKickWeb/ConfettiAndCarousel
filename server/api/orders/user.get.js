@@ -67,9 +67,13 @@ export default defineEventHandler(async (event) => {
         OrderStatusHistory: {
           select: {
             id: true,
-            status: true,
+            fromStatus: true,
+            toStatus: true,
+            fromStage: true,
+            toStage: true,
+            notes: true,
             changedAt: true,
-            notes: true
+            changedBy: true
           },
           orderBy: {
             changedAt: 'desc'

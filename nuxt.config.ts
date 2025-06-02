@@ -15,6 +15,13 @@ export default defineNuxtConfig({
   nitro: {
     experimental: {
       wasm: true
+    },
+    // Vercel-specific configuration
+    preset: 'vercel',
+    esbuild: {
+      options: {
+        target: 'es2020'
+      }
     }
   },
   // Server-side rendering options
@@ -51,7 +58,10 @@ export default defineNuxtConfig({
   },
   vite: {
     build: {
-      target: 'es2019'
+      target: 'es2020'
+    },
+    define: {
+      global: 'globalThis'
     }
   },
   compatibilityDate: '2024-11-01'
