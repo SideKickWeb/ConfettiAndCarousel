@@ -20,32 +20,56 @@ export const useAuthStore = defineStore('auth', {
   
   actions: {
     async fetchUser() {
-      if (this.user) return this.user
+      console.log('AuthStore: fetchUser called')
+      console.log('AuthStore: Current user state:', this.user)
+      
+      if (this.user) {
+        console.log('AuthStore: User already exists in store, returning:', this.user)
+        return this.user
+      }
       
       this.loading = true
       this.error = null
       
       try {
+        console.log('AuthStore: Making API request to /api/auth/me')
         const response = await fetch('/api/auth/me')
+        
+        console.log('AuthStore: Response status:', response.status)
+        console.log('AuthStore: Response ok:', response.ok)
+        
         if (!response.ok) {
           if (response.status !== 401) {
             const data = await response.json()
+            console.log('AuthStore: Error response data:', data)
             this.error = data.message || 'Failed to fetch user'
           }
           this.user = null
           return null
         }
         
-        const userData = await response.json()
-        this.user = userData
-        return userData
+        const result = await response.json()
+        console.log('AuthStore: API response:', result)
+        
+        // Handle the API response structure { success: true, data: {...} }
+        if (result.success && result.data) {
+          console.log('AuthStore: Setting user from result.data:', result.data)
+          this.user = result.data
+          return result.data
+        } else {
+          // Fallback for different response structures
+          console.log('AuthStore: Setting user from result:', result)
+          this.user = result
+          return result
+        }
       } catch (error) {
-        console.error('Error fetching user:', error)
+        console.error('AuthStore: Error fetching user:', error)
         this.error = 'An unexpected error occurred'
         this.user = null
         return null
       } finally {
         this.loading = false
+        console.log('AuthStore: fetchUser completed, final user state:', this.user)
       }
     },
     
@@ -68,8 +92,16 @@ export const useAuthStore = defineStore('auth', {
           return false
         }
         
-        const userData = await response.json()
-        this.user = userData
+        const result = await response.json()
+        
+        // Handle the API response structure { success: true, data: {...} }
+        if (result.success && result.data) {
+          this.user = result.data
+        } else {
+          // Fallback for different response structures
+          this.user = result
+        }
+        
         return true
       } catch (error) {
         console.error('Login error:', error)

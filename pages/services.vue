@@ -51,7 +51,7 @@
                 class="product-card"
               >
                 <div class="product-image">
-                  <img v-if="product.image" :src="product.image" :alt="product.name">
+                  <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.name">
                   <div v-else class="no-image">
                     <span>No image available</span>
               </div>

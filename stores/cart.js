@@ -14,7 +14,16 @@ export const useCartStore = defineStore('cart', {
     
     totalPrice: (state) => {
       return state.items.reduce((total, item) => {
-        return total + (Number(item.product.price) * item.quantity)
+        let basePrice = Number(item.product.price) * item.quantity;
+        let optionsPrice = 0;
+        
+        if (item.customOptions && Array.isArray(item.customOptions)) {
+          optionsPrice = item.customOptions.reduce((sum, option) => {
+            return sum + ((option.priceAdjustment || 0) * item.quantity);
+          }, 0);
+        }
+        
+        return total + basePrice + optionsPrice;
       }, 0)
     },
     

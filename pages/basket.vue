@@ -5,8 +5,8 @@
     <div class="content">
       <div class="basket-header">
         <div class="header-content">
-          <h1>Your Shopping Basket</h1>
-          <p>Review and manage the items in your basket</p>
+          <h1>Your Order</h1>
+          <p>Review and manage the items in your purchase order</p>
         </div>
       </div>
 
@@ -20,8 +20,8 @@
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
             </svg>
           </div>
-          <h2>Your basket is empty</h2>
-          <p>Looks like you haven't added any items to your basket yet.</p>
+          <h2>Your order is empty</h2>
+          <p>Looks like you haven't added any items to your order yet.</p>
           <NuxtLink to="/products" class="primary-button">
             Browse Products
           </NuxtLink>
@@ -32,7 +32,7 @@
           <div class="basket-items">
             <div v-for="item in cartStore.items" :key="item.id" class="basket-item">
               <div class="item-image">
-                <img v-if="item.product.image" :src="item.product.image" :alt="item.product.name">
+                <img v-if="item.product.imageUrl" :src="item.product.imageUrl" :alt="item.product.name">
                 <div v-else class="no-image">
                   <span>No image</span>
                 </div>
@@ -40,14 +40,26 @@
 
               <div class="item-details">
                 <h3>{{ item.product.name }}</h3>
-                <p v-if="item.product.categoryName" class="item-category">{{ item.product.categoryName }}</p>
+                <p v-if="item.product.category" class="item-category">{{ item.product.category.name }}</p>
                 <p class="item-price">£{{ formatPrice(item.product.price) }}</p>
                 
                 <div v-if="item.customOptions && item.customOptions.length" class="item-options">
                   <p class="options-title">Options:</p>
                   <ul>
                     <li v-for="option in item.customOptions" :key="option.optionId">
-                      {{ option.optionName }}: {{ option.value }}
+                      <span class="option-info">
+                        {{ option.optionName }}: 
+                        <!-- Color swatch for color options -->
+                        <span v-if="isColorOption(option.optionName)" class="color-option">
+                          <span class="color-swatch-mini" :style="{ backgroundColor: getColorFromValue(option.value) }"></span>
+                          {{ option.label || option.value }}
+                        </span>
+                        <!-- Regular text for non-color options -->
+                        <span v-else>{{ option.label || option.value }}</span>
+                      </span>
+                      <span v-if="option.priceAdjustment && option.priceAdjustment !== 0" class="price-adjustment">
+                        ({{ option.priceAdjustment > 0 ? '+' : '' }}£{{ formatPrice(Math.abs(option.priceAdjustment)) }})
+                      </span>
                     </li>
                   </ul>
                 </div>
@@ -69,7 +81,7 @@
                   >+</button>
                 </div>
                 <div class="item-total">
-                  £{{ formatPrice(item.product.price * item.quantity) }}
+                  £{{ formatPrice(calculateItemTotal(item)) }}
                 </div>
                 <button 
                   type="button" 
@@ -92,15 +104,15 @@
                 <span>£{{ formatPrice(cartStore.totalPrice) }}</span>
               </div>
               <div class="summary-row">
-                <span>Shipping</span>
-                <span>Calculated at checkout</span>
+                <span>Collection</span>
+                <span>From Cannock, Staffordshire</span>
               </div>
               <div class="summary-total">
                 <span>Total</span>
                 <span>£{{ formatPrice(cartStore.totalPrice) }}</span>
               </div>
               <div class="summary-notice">
-                <p>Final price and shipping costs will be confirmed at checkout.</p>
+                <p><strong>Important:</strong> This order will be reviewed personally before confirmation. Final pricing and collection details will be confirmed when we contact you.</p>
               </div>
             </div>
             <div class="summary-actions">
@@ -110,7 +122,7 @@
                 class="checkout-button"
                 :disabled="!cartStore.hasItems"
               >
-                Proceed to Checkout
+                Submit Order Request
               </button>
               <NuxtLink to="/products" class="continue-shopping">
                 Continue Shopping
@@ -169,7 +181,7 @@ const decrementQuantity = (item) => {
 // Remove item from cart
 const removeItem = (itemId) => {
   cartStore.removeItem(itemId)
-  showToast('Item removed from basket', 'success')
+  showToast('Item removed from order', 'success')
 }
 
 // Proceed to checkout
@@ -190,6 +202,72 @@ const showToast = (message, type = 'success') => {
     }
   }, 3000)
 }
+
+// Calculate item total including price adjustments from custom options
+const calculateItemTotal = (item) => {
+  let basePrice = item.product.price;
+  let optionsPrice = 0;
+  
+  if (item.customOptions && item.customOptions.length) {
+    optionsPrice = item.customOptions.reduce((sum, option) => {
+      return sum + (option.priceAdjustment || 0);
+    }, 0);
+  }
+  
+  return (basePrice + optionsPrice) * item.quantity;
+}
+
+// Check if an option is a color option
+const isColorOption = (optionName) => {
+  const colorKeywords = ['color', 'colour'];
+  return colorKeywords.some(keyword => optionName.toLowerCase().includes(keyword));
+};
+
+// Get color from option value
+const getColorFromValue = (value) => {
+  // Convert color names to hex values
+  const colorMap = {
+    'red': '#ef4444',
+    'blue': '#3b82f6',
+    'yellow': '#eab308',
+    'green': '#22c55e',
+    'purple': '#a855f7',
+    'pink': '#ec4899',
+    'orange': '#f97316',
+    'black': '#000000',
+    'white': '#ffffff',
+    'gray': '#6b7280',
+    'grey': '#6b7280',
+    'brown': '#92400e',
+    'navy': '#1e3a8a',
+    'teal': '#14b8a6',
+    'lime': '#84cc16',
+    'indigo': '#6366f1',
+    'cyan': '#06b6d4',
+    'rose': '#f43f5e',
+    'amber': '#f59e0b',
+    'emerald': '#10b981',
+    'slate': '#475569',
+    'zinc': '#71717a',
+    'neutral': '#737373',
+    'stone': '#78716c'
+  };
+  
+  const normalizedValue = value.toLowerCase().trim();
+  
+  // Check if it's already a hex color
+  if (normalizedValue.startsWith('#')) {
+    return normalizedValue;
+  }
+  
+  // Check if it's a CSS color name
+  if (colorMap[normalizedValue]) {
+    return colorMap[normalizedValue];
+  }
+  
+  // Default to a neutral color if not found
+  return '#6b7280';
+};
 </script>
 
 <style scoped>
@@ -381,18 +459,57 @@ const showToast = (message, type = 'success') => {
 }
 
 .options-title {
-  font-weight: 500;
-  margin-bottom: 0.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
 }
 
 .item-options ul {
-  list-style-type: none;
-  padding-left: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .item-options li {
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
-  margin-bottom: 0.2rem;
+}
+
+.price-adjustment {
+  color: var(--accent-primary);
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+/* Color option styles for basket */
+.color-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-swatch-mini {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+/* Handle white color visibility in mini swatches */
+.color-swatch-mini[style*="rgb(255, 255, 255)"],
+.color-swatch-mini[style*="#ffffff"],
+.color-swatch-mini[style*="#fff"] {
+  border-color: #e5e7eb;
+}
+
+.option-info {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .item-actions {

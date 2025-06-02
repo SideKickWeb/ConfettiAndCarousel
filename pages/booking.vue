@@ -18,10 +18,6 @@
           </button>
         </div>
 
-        <div v-else-if="!authStore.isAuthenticated" class="info-message">
-          <p>Please <NuxtLink to="/login" class="link">sign in</NuxtLink> or <NuxtLink to="/register" class="link">create an account</NuxtLink> to book an event.</p>
-        </div>
-
         <form v-else @submit.prevent="submitBooking" class="booking-form">
           <!-- Event Details Section -->
           <div class="form-section">
@@ -29,15 +25,7 @@
             <div class="form-grid">
               <div class="form-group">
                 <label for="eventType">Event Type</label>
-                <select id="eventType" v-model="booking.eventType" required>
-                  <option value="" disabled>Select event type</option>
-                  <option value="birthday">Birthday Party</option>
-                  <option value="wedding">Wedding</option>
-                  <option value="corporate">Corporate Event</option>
-                  <option value="babyShower">Baby Shower</option>
-                  <option value="graduation">Graduation</option>
-                  <option value="other">Other</option>
-                </select>
+                <input type="text" id="eventType" v-model="booking.eventType" required placeholder="e.g., Birthday Party, Wedding, Corporate Event">
               </div>
 
               <div class="form-group">
@@ -51,92 +39,51 @@
               </div>
 
               <div class="form-group">
-                <label for="description">Event Description</label>
-                <textarea id="description" v-model="booking.description" rows="3" placeholder="Tell us more about your event..."></textarea>
+                <label for="eventLocation">Event Location</label>
+                <input type="text" id="eventLocation" v-model="booking.location" placeholder="Where will your event be held?" required>
+              </div>
+            </div>
+            
+            <!-- Description field outside grid -->
+            <div class="description-field" style="margin-top: 1.5rem; width: 100%; max-width: 100%; box-sizing: border-box;">
+              <label for="description" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-primary);">Event Description (Optional)</label>
+              <textarea id="description" v-model="booking.description" rows="3" placeholder="Tell us more about your event..." style="width: 100%; max-width: 100%; box-sizing: border-box; margin: 0; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--bg-secondary); color: var(--text-primary); resize: vertical; min-height: 80px; font-family: inherit; line-height: 1.4;"></textarea>
+            </div>
+          </div>
+
+          <!-- Customer Information Section -->
+          <div class="form-section">
+            <h2>Your Information</h2>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" v-model="customerInfo.firstName" required placeholder="Your first name">
+              </div>
+              
+              <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" v-model="customerInfo.lastName" required placeholder="Your last name">
+              </div>
+              
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" v-model="customerInfo.email" required placeholder="Your email address">
+              </div>
+              
+              <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" v-model="customerInfo.phone" placeholder="Your phone number (optional)">
               </div>
             </div>
           </div>
 
           <!-- Products Section -->
           <div class="form-section">
-            <h2>Select Products</h2>
-            
-            <!-- Loading State -->
-            <div v-if="productsStore.loading" class="loading-container">
-              <span class="loading-spinner"></span>
-              <p>Loading products...</p>
-            </div>
-            
-            <!-- Error State -->
-            <div v-else-if="productsStore.error" class="error-message">
-              <p>{{ productsStore.error }}</p>
-              <button @click="productsStore.clearError" class="text-link">Try Again</button>
-            </div>
-            
-            <!-- Categories -->
-            <div v-else class="product-selection">
-              <div class="category-filters">
-                <button 
-                  type="button"
-                  @click="currentCategory = null"
-                  :class="['filter-btn', currentCategory === null ? 'active' : '']"
-                >
-                  All Products
-                </button>
-                <button 
-                  v-for="category in productsStore.categories" 
-                  :key="category.value" 
-                  type="button"
-                  @click="currentCategory = category.value"
-                  :class="['filter-btn', currentCategory === category.value ? 'active' : '']"
-                >
-                  {{ category.label || 'Category' }}
-                </button>
-              </div>
-              
-              <!-- Product List -->
-              <div class="product-grid">
-                <div 
-                  v-for="product in filteredProducts" 
-                  :key="product.id" 
-                  class="product-card"
-                >
-                  <div class="product-image">
-                    <img 
-                      v-if="product.image" 
-                      :src="product.image" 
-                      :alt="product.name"
-                    >
-                    <div v-else class="no-image">
-                      <span>No image available</span>
-                    </div>
-                  </div>
-                  
-                  <div class="product-info">
-                    <div class="product-header">
-                      <h3>{{ product.name }}</h3>
-                      <span class="price">£{{ formatPrice(product.price) }}</span>
-                    </div>
-                    <p class="description">{{ product.description }}</p>
-                    
-                    <!-- Add to Booking Button -->
-                    <div class="product-actions">
-                      <button 
-                        type="button"
-                        @click="selectProduct(product)"
-                        class="book-button"
-                      >
-                        Add to Booking
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <h2>Event Items</h2>
             
             <!-- Selected Products -->
             <div v-if="selectedProducts.length > 0" class="selected-products" ref="selectedProductsSection">
-              <h3>Your Selected Products <span class="product-count">{{ selectedProducts.length }}</span></h3>
+              <h3>Your Selected Items <span class="product-count">{{ selectedProducts.length }}</span></h3>
               <div class="selected-products-list">
                 <div v-for="(item, index) in selectedProducts" :key="index" 
                   class="selected-product-item"
@@ -149,7 +96,16 @@
                         <p class="options-title">Customizations:</p>
                         <ul class="options-list">
                           <li v-for="custom in item.customValues" :key="custom.optionId">
-                            {{ custom.optionName }}: {{ custom.value }}
+                            <span class="option-info">
+                              {{ custom.optionName }}: 
+                              <!-- Color swatch for color options -->
+                              <span v-if="isColorOption(custom.optionName)" class="color-option">
+                                <span class="color-swatch-mini" :style="{ backgroundColor: getColorFromValue(custom.value) }"></span>
+                                {{ custom.value }}
+                              </span>
+                              <!-- Regular text for non-color options -->
+                              <span v-else>{{ custom.value }}</span>
+                            </span>
                           </li>
                         </ul>
                       </div>
@@ -189,6 +145,15 @@
                 </div>
               </div>
             </div>
+
+            <!-- Add More Items Section -->
+            <div class="add-items-section">
+              <h3>{{ selectedProducts.length > 0 ? 'Add More Items' : 'Add Items to Your Event' }}</h3>
+              <p>Browse our products and add items to your event directly from the product pages.</p>
+              <NuxtLink to="/products" class="browse-products-btn">
+                Browse All Products
+              </NuxtLink>
+            </div>
           </div>
           
           <!-- Submission Section -->
@@ -216,7 +181,7 @@
             <button 
               type="submit" 
               class="submit-button"
-              :disabled="isLoading || productsStore.loading || selectedProducts.length === 0 || !acknowledgmentChecked"
+              :disabled="isLoading || productsStore.loading || selectedProducts.length === 0 || !acknowledgmentChecked || !isCustomerInfoValid"
             >
               <span v-if="isLoading">Submitting...</span>
               <span v-else>Submit Booking Request</span>
@@ -226,75 +191,6 @@
       </div>
     </div>
     
-    <!-- Product Customization Modal -->
-    <div v-if="modalProduct" class="modal-overlay">
-      <div class="modal-container">
-        <div class="modal-header">
-          <h3>Customize {{ modalProduct.name }}</h3>
-          <button @click="closeModal" class="close-button">&times;</button>
-        </div>
-        
-        <div class="modal-content">
-          <!-- Variant Selection -->
-          <div v-if="modalProduct.variants && modalProduct.variants.length > 0" class="form-group">
-            <label>Variant</label>
-            <div class="select-wrapper">
-              <select v-model="selectedVariant">
-                <option v-for="variant in modalProduct.variants" :key="variant.id" :value="variant">
-                  {{ variant.name }} {{ variant.price ? `(+£${formatPrice(variant.price)})` : '' }}
-                </option>
-              </select>
-            </div>
-          </div>
-          
-          <!-- Custom Options -->
-          <div v-if="modalProduct.customizable && modalProduct.customOptions && modalProduct.customOptions.length > 0">
-            <div v-for="option in modalProduct.customOptions" :key="option.id" class="form-group">
-              <label>{{ option.name }}</label>
-              
-              <!-- Text input for text options -->
-              <input 
-                v-if="option.type === 'text'" 
-                type="text" 
-                v-model="customValues[option.id]" 
-                :placeholder="option.description"
-              >
-              
-              <!-- Select for dropdown options -->
-              <select 
-                v-else-if="option.type === 'select'" 
-                v-model="customValues[option.id]"
-              >
-                <option value="" disabled>Choose an option</option>
-                <option 
-                  v-for="choice in option.choices ? option.choices.split(',') : []" 
-                  :key="choice" 
-                  :value="choice.trim()"
-                >
-                  {{ choice.trim() }}
-                </option>
-              </select>
-              
-              <!-- Color picker -->
-              <input 
-                v-else-if="option.type === 'color'" 
-                type="color" 
-                v-model="customValues[option.id]"
-                class="color-picker"
-              >
-              
-              <p class="option-description">{{ option.description }}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="modal-footer">
-          <button @click="closeModal" class="cancel-button">Cancel</button>
-          <button @click="addToBooking" class="confirm-button">Add to Booking</button>
-        </div>
-      </div>
-    </div>
-
     <!-- Toast Notifications -->
     <div class="toast-container">
       <div v-for="(toast, index) in toasts" :key="index" class="toast">
@@ -308,7 +204,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useProductsStore } from '../stores/products'
 import { useBookingStore } from '../stores/booking'
@@ -324,17 +220,13 @@ const router = useRouter()
 const booking = ref({
   eventType: '',
   eventDate: '',
+  location: '',
   description: '',
   guests: 1
 })
 
 // Product selection state
 const selectedProducts = ref([])
-const currentCategory = ref(null)
-const modalProduct = ref(null)
-const currentVariant = ref(null)
-const customValues = ref({})
-const modalQuantity = ref(1)
 const selectedProductsSection = ref(null)
 const toasts = ref([])
 
@@ -345,20 +237,18 @@ const submitted = ref(false)
 // Acknowledgment checkbox state
 const acknowledgmentChecked = ref(false)
 
+// Customer information state
+const customerInfo = ref({
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: ''
+})
+
 // Get today's date for min attribute
 const minDate = computed(() => {
   const today = new Date()
   return today.toISOString().split('T')[0]
-})
-
-// Filter products by category
-const filteredProducts = computed(() => {
-  if (!currentCategory.value) {
-    return productsStore.products;
-  }
-  return productsStore.products.filter(p => 
-    p.categoryId === currentCategory.value || p.category === currentCategory.value
-  );
 })
 
 // Calculate total price
@@ -369,125 +259,168 @@ const totalPrice = computed(() => {
   }, 0)
 })
 
-// Fetch products and categories on component mount
+// Fetch any initial data on component mount
 onMounted(async () => {
-  await productsStore.fetchCategories();
-  await productsStore.fetchProducts();
-  console.log('Categories loaded in booking page:', productsStore.categories);
+  // Load any items added from product pages
+  loadEventItemsFromStorage();
+  // Load saved form data
+  loadSavedFormData();
 })
+
+// Watch for changes in form data and save automatically
+watch(booking, () => {
+  saveFormData();
+}, { deep: true });
+
+watch(customerInfo, () => {
+  saveFormData();
+}, { deep: true });
+
+watch(acknowledgmentChecked, () => {
+  saveFormData();
+});
+
+// Load event items from localStorage
+const loadEventItemsFromStorage = () => {
+  try {
+    const currentEvent = JSON.parse(localStorage.getItem('currentEvent') || '{"items": []}');
+    if (currentEvent.items && currentEvent.items.length > 0) {
+      // Convert the stored items to the format expected by the booking page
+      for (const item of currentEvent.items) {
+        const existingIndex = selectedProducts.value.findIndex(selected => 
+          selected.product.id === item.id
+        );
+        
+        if (existingIndex >= 0) {
+          // Increment quantity if already exists
+          selectedProducts.value[existingIndex].quantity += item.quantity;
+        } else {
+          // Add as new item with proper custom options format
+          selectedProducts.value.push({
+            product: item,
+            quantity: item.quantity,
+            selectedOptions: item.selectedOptions || {},
+            customValues: item.selectedOptions ? Object.entries(item.selectedOptions).map(([optionId, valueId]) => {
+              // Find the option in the product to get the proper name and value
+              const option = item.options?.find(opt => opt.id === optionId);
+              if (option) {
+                if (option.type === 'text') {
+                  return {
+                    optionId,
+                    optionName: option.name,
+                    value: valueId
+                  };
+                } else {
+                  const selectedValue = option.values?.find(v => v.id === valueId);
+                  return {
+                    optionId,
+                    optionName: option.name,
+                    value: selectedValue ? selectedValue.label || selectedValue.value : valueId
+                  };
+                }
+              }
+              return {
+                optionId,
+                optionName: `Option ${optionId}`,
+                value: valueId
+              };
+            }) : [],
+            isNewlyAdded: true
+          });
+        }
+      }
+      
+      // Clear the localStorage after loading
+      localStorage.removeItem('currentEvent');
+      
+      // Remove highlight animations after a delay
+      setTimeout(() => {
+        selectedProducts.value.forEach(item => {
+          item.isNewlyAdded = false;
+        });
+      }, 1500);
+      
+      // Show notification if items were loaded
+      if (currentEvent.items.length > 0) {
+        showToast(`${currentEvent.items.length} item(s) loaded from your previous selection`);
+      }
+    }
+  } catch (error) {
+    console.error('Error loading event items from storage:', error);
+  }
+};
+
+// Load saved form data from localStorage
+const loadSavedFormData = () => {
+  try {
+    const savedBookingData = localStorage.getItem('bookingFormData');
+    const savedCustomerData = localStorage.getItem('customerFormData');
+    const savedAcknowledgment = localStorage.getItem('bookingAcknowledgment');
+    
+    if (savedBookingData) {
+      const parsedBookingData = JSON.parse(savedBookingData);
+      booking.value = { ...booking.value, ...parsedBookingData };
+    }
+    
+    if (savedCustomerData) {
+      const parsedCustomerData = JSON.parse(savedCustomerData);
+      customerInfo.value = { ...customerInfo.value, ...parsedCustomerData };
+    }
+    
+    if (savedAcknowledgment) {
+      acknowledgmentChecked.value = JSON.parse(savedAcknowledgment);
+    }
+    
+    console.log('Loaded saved form data from localStorage');
+  } catch (error) {
+    console.error('Error loading saved form data:', error);
+  }
+};
+
+// Save form data to localStorage
+const saveFormData = () => {
+  try {
+    localStorage.setItem('bookingFormData', JSON.stringify(booking.value));
+    localStorage.setItem('customerFormData', JSON.stringify(customerInfo.value));
+    localStorage.setItem('bookingAcknowledgment', JSON.stringify(acknowledgmentChecked.value));
+  } catch (error) {
+    console.error('Error saving form data:', error);
+  }
+};
+
+// Clear saved form data from localStorage
+const clearSavedFormData = () => {
+  try {
+    localStorage.removeItem('bookingFormData');
+    localStorage.removeItem('customerFormData');
+    localStorage.removeItem('bookingAcknowledgment');
+    console.log('Cleared saved form data from localStorage');
+  } catch (error) {
+    console.error('Error clearing saved form data:', error);
+  }
+};
 
 // Reset form after submission
 const resetForm = () => {
   booking.value = {
     eventType: '',
     eventDate: '',
+    location: '',
     description: '',
     guests: 1
   }
+  customerInfo.value = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: ''
+  }
   selectedProducts.value = []
   submitted.value = false
-}
-
-// Handle product selection
-const selectProduct = (product) => {
-  // For products that don't need customization
-  if (!product.customizable && (!product.variants || product.variants.length === 0)) {
-    // Check if product already exists in the selection
-    const existingIndex = selectedProducts.value.findIndex(item => 
-      item.product.id === product.id && !item.variant
-    )
-    
-    if (existingIndex >= 0) {
-      // Increment quantity if already selected
-      selectedProducts.value[existingIndex].quantity++
-      selectedProducts.value[existingIndex].isNewlyAdded = true
-      
-      // Remove the highlight after animation completes
-      setTimeout(() => {
-        if (selectedProducts.value[existingIndex]) {
-          selectedProducts.value[existingIndex].isNewlyAdded = false
-        }
-      }, 1500)
-      
-      // Show toast notification
-      showToast(`${product.name} quantity increased to ${selectedProducts.value[existingIndex].quantity}`)
-    } else {
-      // Add as new selection
-      selectedProducts.value.push({
-        product,
-        quantity: 1,
-        customValues: [],
-        isNewlyAdded: true
-      })
-      
-      // Remove the highlight after animation completes
-      const newIndex = selectedProducts.value.length - 1
-      setTimeout(() => {
-        if (selectedProducts.value[newIndex]) {
-          selectedProducts.value[newIndex].isNewlyAdded = false
-        }
-      }, 1500)
-      
-      // Show toast notification
-      showToast(`${product.name} added to your booking`)
-    }
-    
-    // Scroll to the selected products section
-    scrollToSelectedProducts()
-  } else {
-    // Open modal for customization
-    modalProduct.value = product
-    currentVariant.value = product.variants && product.variants.length ? product.variants[0] : null
-    customValues.value = {}
-    modalQuantity.value = 1
-  }
-}
-
-// Handle adding customized product to booking
-const addToBooking = () => {
-  if (!modalProduct.value) return
+  acknowledgmentChecked.value = false
   
-  // Convert customValues object to array format for storage
-  const customValuesArray = []
-  
-  if (modalProduct.value.customizable && modalProduct.value.customOptions) {
-    for (const option of modalProduct.value.customOptions) {
-      const value = customValues.value[option.id]
-      if (value) {
-        customValuesArray.push({
-          optionId: option.id,
-          optionName: option.name,
-          value
-        })
-      }
-    }
-  }
-  
-  // Add to selectedProducts
-  selectedProducts.value.push({
-    product: modalProduct.value,
-    variant: currentVariant.value,
-    quantity: modalQuantity.value,
-    customValues: customValuesArray,
-    isNewlyAdded: true
-  })
-  
-  // Remove the highlight after animation completes
-  const newIndex = selectedProducts.value.length - 1
-  setTimeout(() => {
-    if (selectedProducts.value[newIndex]) {
-      selectedProducts.value[newIndex].isNewlyAdded = false
-    }
-  }, 1500)
-  
-  // Show toast notification
-  showToast(`${modalProduct.value.name} added to your booking`)
-  
-  // Close modal
-  closeModal()
-  
-  // Scroll to the selected products section
-  scrollToSelectedProducts()
+  // Clear saved form data from localStorage
+  clearSavedFormData()
 }
 
 // Display toast notification
@@ -511,14 +444,6 @@ const scrollToSelectedProducts = () => {
   }
 }
 
-// Close product customization modal
-const closeModal = () => {
-  modalProduct.value = null
-  currentVariant.value = null
-  customValues.value = {}
-  modalQuantity.value = 1
-}
-
 // Remove a product from selection
 const removeProduct = (index) => {
   selectedProducts.value.splice(index, 1)
@@ -538,51 +463,71 @@ const decrementQuantity = (index) => {
 
 // Submit booking
 const submitBooking = async () => {
-  if (!authStore.isAuthenticated) return
+  if (!acknowledgmentChecked.value) {
+    showToast('Please acknowledge the important information before proceeding.');
+    return;
+  }
+
+  if (selectedProducts.value.length === 0) {
+    showToast('Please add at least one item to your event.');
+    return;
+  }
   
   isLoading.value = true
   
   try {
-    // Transform selectedProducts into format expected by API
-    const bookingItems = selectedProducts.value.map(item => ({
-      productId: item.product.id,
-      variantId: item.variant?.id || null,
-      quantity: item.quantity,
-      customValues: item.customValues.map(cv => ({
-        optionId: cv.optionId,
-        value: cv.value
-      }))
-    }))
-    
-    // Calculate total price
-    const total = selectedProducts.value.reduce((sum, item) => {
-      // Variant price or product price
-      const price = item.product.price
-      return sum + (price * item.quantity)
-    }, 0)
-    
-    const response = await fetch('/api/bookings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.token}`
+    // Prepare event data
+    const eventData = {
+      customerInfo: {
+        firstName: customerInfo.value.firstName,
+        lastName: customerInfo.value.lastName,
+        email: customerInfo.value.email,
+        phone: customerInfo.value.phone
       },
-      body: JSON.stringify({
-        ...booking.value,
-        total,
-        items: bookingItems
-      })
-    })
-    
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || 'Failed to submit booking')
+      eventType: booking.value.eventType,
+      eventDate: booking.value.eventDate,
+      location: booking.value.location,
+      guests: booking.value.guests,
+      description: booking.value.description,
+      items: selectedProducts.value.map(item => ({
+        product: item.product,
+        quantity: item.quantity,
+        selectedOptions: item.selectedOptions || {}
+      }))
     }
     
-    submitted.value = true
+    console.log('Submitting event booking:', eventData)
+    
+    const response = await fetch('/api/events/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(eventData)
+    })
+    
+    const result = await response.json()
+    
+    if (!response.ok) {
+      throw new Error(result.statusMessage || 'Failed to submit event booking')
+    }
+    
+    if (result.success) {
+      // Clear saved form data since submission was successful
+      clearSavedFormData()
+      
+      // Clear the form and selected products
+      resetForm()
+      submitted.value = true
+      showToast(result.data.message || 'Event booking submitted successfully!')
+      console.log('Event booking submitted successfully:', result.data)
+    } else {
+      throw new Error(result.message || 'Failed to submit event booking')
+    }
+    
   } catch (error) {
-    console.error('Error submitting booking:', error)
-    alert(error.message || 'An unexpected error occurred')
+    console.error('Error submitting event booking:', error)
+    showToast(error.message || 'An unexpected error occurred. Please try again.')
   } finally {
     isLoading.value = false
   }
@@ -593,6 +538,63 @@ const formatPrice = (price) => {
   if (price === undefined || price === null) return '0.00'
   return Number(price).toFixed(2)
 }
+
+// Check if customer information is valid
+const isCustomerInfoValid = computed(() => {
+  return customerInfo.value.firstName && customerInfo.value.lastName && customerInfo.value.email && customerInfo.value.phone;
+})
+
+// Helper function to check if an option is a color option
+const isColorOption = (optionName) => {
+  const colorKeywords = ['color', 'colour'];
+  return colorKeywords.some(keyword => optionName.toLowerCase().includes(keyword));
+};
+
+// Helper function to get color from a value
+const getColorFromValue = (value) => {
+  // Convert color names to hex values
+  const colorMap = {
+    'red': '#ef4444',
+    'blue': '#3b82f6',
+    'yellow': '#eab308',
+    'green': '#22c55e',
+    'purple': '#a855f7',
+    'pink': '#ec4899',
+    'orange': '#f97316',
+    'black': '#000000',
+    'white': '#ffffff',
+    'gray': '#6b7280',
+    'grey': '#6b7280',
+    'brown': '#92400e',
+    'navy': '#1e3a8a',
+    'teal': '#14b8a6',
+    'lime': '#84cc16',
+    'indigo': '#6366f1',
+    'cyan': '#06b6d4',
+    'rose': '#f43f5e',
+    'amber': '#f59e0b',
+    'emerald': '#10b981',
+    'slate': '#475569',
+    'zinc': '#71717a',
+    'neutral': '#737373',
+    'stone': '#78716c'
+  };
+  
+  const normalizedValue = value.toLowerCase().trim();
+  
+  // Check if it's already a hex color
+  if (normalizedValue.startsWith('#')) {
+    return normalizedValue;
+  }
+  
+  // Check if it's a CSS color name
+  if (colorMap[normalizedValue]) {
+    return colorMap[normalizedValue];
+  }
+  
+  // Default to a neutral color if not found
+  return '#6b7280';
+};
 </script>
 
 <style scoped>
@@ -603,8 +605,9 @@ const formatPrice = (price) => {
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  overflow-x: hidden !important;
   background-color: var(--bg-primary);
+  box-sizing: border-box;
 }
 
 .content {
@@ -613,6 +616,8 @@ const formatPrice = (price) => {
   width: 100%;
   max-width: var(--content-max-width);
   margin: 0 auto;
+  overflow-x: hidden !important;
+  box-sizing: border-box;
 }
 
 .booking-header {
@@ -653,6 +658,8 @@ const formatPrice = (price) => {
   margin: 0 auto;
   padding: 0 2rem 4rem;
   width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .success-message {
@@ -712,6 +719,9 @@ const formatPrice = (price) => {
   padding: 2rem;
   box-shadow: 0 4px 20px var(--shadow-color);
   border: 1px solid var(--border-color);
+  overflow-x: hidden;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .form-section h2 {
@@ -732,10 +742,72 @@ const formatPrice = (price) => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.form-group.full-width textarea {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0.75rem !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  resize: vertical !important;
+  min-height: 80px !important;
+  font-family: inherit !important;
+  line-height: 1.4 !important;
+}
+
+/* Additional constraint for the textarea element specifically */
+#description {
+  width: calc(100% - 2px) !important;
+  max-width: calc(100% - 2px) !important;
+  min-width: 0 !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0.75rem !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  resize: vertical !important;
+  min-height: 80px !important;
+  font-family: inherit !important;
+  line-height: 1.4 !important;
+  outline: none !important;
+  overflow-x: hidden !important;
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
 }
 
 .form-group label {
@@ -753,6 +825,15 @@ input, select, textarea {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  line-height: 1.4;
 }
 
 input:focus, select:focus, textarea:focus {
@@ -1217,103 +1298,40 @@ input:focus, select:focus, textarea:focus {
   }
 }
 
-/* Modal styling */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--overlay-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-}
-
-.modal-container {
-  background-color: var(--card-bg);
-  border-radius: 12px;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 30px var(--shadow-color);
-  border: 1px solid var(--border-color);
-}
-
-.modal-header {
-  padding: 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.modal-header h3 {
-  font-size: 1.5rem;
-  color: var(--accent-primary);
-  margin: 0;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--text-primary);
-}
-
-.modal-content {
-  padding: 1.5rem;
-}
-
-.modal-footer {
-  padding: 1.5rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  border-top: 1px solid var(--border-color);
-}
-
-.cancel-button {
-  padding: 0.75rem 1.5rem;
+/* Add Items Section */
+.add-items-section {
+  padding: 2rem;
   background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  border: 2px dashed var(--border-color);
+  border-radius: 12px;
+  text-align: center;
+  margin-top: 2rem;
 }
 
-.cancel-button:hover {
-  background-color: var(--hover-bg);
+.add-items-section h3 {
+  color: var(--accent-primary);
+  margin-bottom: 1rem;
 }
 
-.confirm-button {
-  padding: 0.75rem 1.5rem;
+.add-items-section p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.browse-products-btn {
+  display: inline-block;
   background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
   color: white;
-  border: none;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
+  text-decoration: none;
   font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
 }
 
-.confirm-button:hover {
+.browse-products-btn:hover {
   background: linear-gradient(to right, var(--accent-secondary), var(--accent-primary));
-}
-
-.color-picker {
-  height: 40px;
-  padding: 5px;
-}
-
-.select-wrapper {
-  position: relative;
+  transform: translateY(-2px);
 }
 
 /* Acknowledgment checkbox styling */
@@ -1399,18 +1417,18 @@ input:focus, select:focus, textarea:focus {
   .form-section {
     padding: 1.5rem;
   }
-
-  .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .booking-content {
+    padding: 0 1rem 4rem;
   }
 }
 
 @media (max-width: 480px) {
-  .product-grid {
-    grid-template-columns: 1fr;
-  }
-
   .product-controls {
     flex-direction: column;
     align-items: flex-start;
@@ -1430,5 +1448,59 @@ input:focus, select:focus, textarea:focus {
   .remove-btn {
     margin-top: 0;
   }
+  
+  .form-section {
+    padding: 1rem;
+    margin: 0 -0.5rem;
+  }
+  
+  .booking-content {
+    padding: 0 0.5rem 4rem;
+  }
+  
+  input, select, textarea {
+    padding: 0.5rem;
+  }
+}
+
+/* Color option styles for booking page */
+.color-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-swatch-mini {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+/* Handle white color visibility in mini swatches */
+.color-swatch-mini[style*="rgb(255, 255, 255)"],
+.color-swatch-mini[style*="#ffffff"],
+.color-swatch-mini[style*="#fff"] {
+  border-color: #e5e7eb;
+}
+
+.option-info {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.options-list {
+  margin: 0.5rem 0;
+  padding-left: 1rem;
+}
+
+.options-list li {
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 </style> 

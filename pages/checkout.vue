@@ -27,31 +27,61 @@
             <h2>Order Summary</h2>
             <div class="order-items">
               <div v-for="item in cartStore.items" :key="item.id" class="order-item">
-                <div class="item-name">
-                  <span>{{ item.product.name }}</span>
-                  <span class="item-quantity">x{{ item.quantity }}</span>
+                <div class="item-details">
+                  <div class="item-name-row">
+                    <span class="item-name">{{ item.product.name }}</span>
+                    <span class="item-quantity">x{{ item.quantity }}</span>
+                  </div>
+                  <div v-if="item.customOptions && item.customOptions.length > 0" class="item-options">
+                    <div v-for="option in item.customOptions" :key="option.optionId" class="option-detail">
+                      <span class="option-name">{{ option.optionName }}:</span>
+                      <!-- Color swatch for color options -->
+                      <span v-if="isColorOption(option.optionName)" class="option-value color-option">
+                        <span class="color-swatch-mini" :style="{ backgroundColor: getColorFromValue(option.value) }"></span>
+                        {{ option.label || option.value }}
+                      </span>
+                      <!-- Regular text for non-color options -->
+                      <span v-else class="option-value">{{ option.label || option.value }}</span>
+                      <span v-if="option.priceAdjustment && option.priceAdjustment !== 0" class="price-adjustment">
+                        ({{ option.priceAdjustment > 0 ? '+' : '' }}£{{ formatPrice(Math.abs(option.priceAdjustment)) }})
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div class="item-price">£{{ formatPrice(item.product.price * item.quantity) }}</div>
+                <div class="item-price">£{{ formatPrice(calculateItemTotal(item)) }}</div>
               </div>
             </div>
             <div class="order-total">
               <span>Total</span>
-              <span>£{{ formatPrice(cartStore.totalPrice) }}</span>
+              <span>£{{ formatPrice(calculateOrderTotal()) }}</span>
             </div>
           </div>
 
           <!-- Customer Information -->
           <div class="checkout-section">
             <h2>Your Information</h2>
-            <div class="form-group">
-              <label for="name">Full Name</label>
-              <input
-                type="text"
-                id="name"
-                v-model="customerInfo.name"
-                required
-                placeholder="Your full name"
-              />
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input
+                  type="text"
+                  id="firstName"
+                  v-model="customerInfo.firstName"
+                  required
+                  placeholder="Your first name"
+                />
+              </div>
+              
+              <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input
+                  type="text"
+                  id="lastName"
+                  v-model="customerInfo.lastName"
+                  required
+                  placeholder="Your last name"
+                />
+              </div>
             </div>
             
             <div class="form-grid">
@@ -72,67 +102,68 @@
                   type="tel"
                   id="phone"
                   v-model="customerInfo.phone"
-                  required
-                  placeholder="Your phone number"
+                  placeholder="Your phone number (optional)"
                 />
               </div>
-            </div>
-          </div>
-
-          <!-- Shipping Information -->
-          <div class="checkout-section">
-            <h2>Shipping Address</h2>
-            <div class="form-group">
-              <label for="address">Street Address</label>
-              <input
-                type="text"
-                id="address"
-                v-model="shippingInfo.address"
-                required
-                placeholder="Street address"
-              />
             </div>
             
-            <div class="form-grid">
-              <div class="form-group">
-                <label for="city">City</label>
-                <input
-                  type="text"
-                  id="city"
-                  v-model="shippingInfo.city"
-                  required
-                  placeholder="City"
-                />
-              </div>
-              
-              <div class="form-group">
-                <label for="postalCode">Postal Code</label>
-                <input
-                  type="text"
-                  id="postalCode"
-                  v-model="shippingInfo.postalCode"
-                  required
-                  placeholder="Postal code"
-                />
-              </div>
+            <div class="form-group">
+              <label for="notes">Additional Notes (Optional)</label>
+              <textarea
+                id="notes"
+                v-model="customerInfo.notes"
+                rows="3"
+                placeholder="Any special requests or notes about your order..."
+              ></textarea>
             </div>
           </div>
 
-          <!-- Payment Method -->
+          <!-- Collection Information -->
           <div class="checkout-section">
-            <h2>Payment Method</h2>
-            <p class="payment-info">
-              Payment will be collected after your order has been reviewed and confirmed by our team. We'll contact you with payment instructions once your order is approved.
-            </p>
+            <h2>Collection Information</h2>
+            <div class="collection-info">
+              <p><strong>Collection Location:</strong> Cannock, Staffordshire</p>
+              <p><strong>Collection Process:</strong> After your order is reviewed and confirmed, we'll contact you to arrange a convenient collection time.</p>
+              <p><strong>Order Review:</strong> All orders are personally reviewed to ensure we can meet your requirements and provide the best service.</p>
+            </div>
+          </div>
+
+          <!-- Payment Information -->
+          <div class="checkout-section">
+            <h2>Order Process</h2>
+            <div class="process-info">
+              <div class="process-step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                  <h4>Submit Order Request</h4>
+                  <p>Complete this form to submit your order request</p>
+                </div>
+              </div>
+              <div class="process-step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                  <h4>Order Review</h4>
+                  <p>We'll review your order and contact you within 24 hours</p>
+                </div>
+              </div>
+              <div class="process-step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                  <h4>Confirmation & Payment</h4>
+                  <p>Finalize details and arrange payment & collection</p>
+                </div>
+              </div>
+            </div>
             
             <!-- Comprehensive disclaimer -->
             <div class="disclaimer-box">
               <h4>Important Information</h4>
               <ul>
-                <li><strong>Prices shown are not final.</strong> Customizations and additional product additions might change the total price based on your specific requirements.</li>
+                <li><strong>Prices shown are not final.</strong> Customizations and additional requirements might change the total price.</li>
                 <li><strong>Availability is not guaranteed.</strong> Your order is subject to product availability and will be reviewed.</li>
-                <li><strong>Confirmation process:</strong> After submitting this request, our team will review your order, confirm availability, and contact you for payment.</li>
+                <li><strong>Confirmation process:</strong> After submitting this request, our team will review your order, confirm availability, and contact you for payment arrangements.</li>
                 <li><strong>Your order is only guaranteed</strong> after payment is received and confirmed by our team.</li>
+                <li><strong>Collection only:</strong> All items must be collected from our location in Cannock, Staffordshire.</li>
               </ul>
             </div>
             
@@ -141,7 +172,7 @@
               <label class="checkbox-container">
                 <input type="checkbox" v-model="acknowledgmentChecked" required>
                 <span class="checkmark"></span>
-                <span class="acknowledgment-text">I have read and acknowledge the <strong>important information</strong> above regarding pricing, availability, confirmation process, and that my order is only guaranteed after payment is received and confirmed.</span>
+                <span class="acknowledgment-text">I have read and acknowledge the <strong>important information</strong> above regarding pricing, availability, confirmation process, collection requirements, and that my order is only guaranteed after payment is received and confirmed.</span>
               </label>
             </div>
           </div>
@@ -149,10 +180,10 @@
           <!-- Order Actions -->
           <div class="checkout-actions">
             <button type="submit" class="place-order-btn" :disabled="isProcessing || !acknowledgmentChecked">
-              {{ isProcessing ? 'Processing...' : 'Place Order' }}
+              {{ isProcessing ? 'Submitting Order...' : 'Submit Order Request' }}
             </button>
             <NuxtLink to="/basket" class="back-to-basket">
-              Back to Basket
+              Back to Your Order
             </NuxtLink>
           </div>
         </form>
@@ -165,13 +196,34 @@
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
           </div>
-          <h2>Thank You For Your Order!</h2>
-          <p>Your order has been received and is being processed.</p>
+          <h2>Order Request Submitted!</h2>
+          <p v-if="orderMessage">{{ orderMessage }}</p>
           <p>Order reference: <strong>{{ orderReference }}</strong></p>
-          <p>A confirmation email has been sent to <strong>{{ customerInfo.email }}</strong>.</p>
-          <NuxtLink to="/products" class="primary-button">
-            Continue Shopping
-          </NuxtLink>
+          <p>A confirmation email will be sent to <strong>{{ customerInfo.email }}</strong> once your order has been reviewed.</p>
+          <div class="confirmation-actions">
+            <NuxtLink to="/products" class="primary-button">
+              Continue Shopping
+            </NuxtLink>
+            <NuxtLink to="/" class="secondary-button">
+              Return Home
+            </NuxtLink>
+          </div>
+        </div>
+
+        <!-- Error state -->
+        <div v-if="orderError" class="order-error">
+          <div class="error-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </div>
+          <h3>Unable to Submit Order</h3>
+          <p>{{ orderError }}</p>
+          <button @click="resetOrderState" class="retry-button">
+            Try Again
+          </button>
         </div>
       </div>
     </div>
@@ -181,7 +233,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useCartStore } from '../stores/cart'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
@@ -192,86 +244,175 @@ const authStore = useAuthStore()
 
 // Order state
 const customerInfo = ref({
-  name: '',
+  firstName: '',
+  lastName: '',
   email: '',
-  phone: ''
-})
-
-const shippingInfo = ref({
-  address: '',
-  city: '',
-  postalCode: ''
+  phone: '',
+  notes: ''
 })
 
 const isProcessing = ref(false)
-const orderComplete = ref(false)
-const orderReference = ref('')
 const acknowledgmentChecked = ref(false)
+const orderComplete = ref(false)
+const orderError = ref(null)
+const orderReference = ref('')
+const orderMessage = ref('')
 
-// If user is logged in, pre-fill their information
+// Load cart data on mount
 onMounted(() => {
-  if (authStore.isAuthenticated) {
-    customerInfo.value.name = `${authStore.firstName || ''} ${authStore.lastName || ''}`.trim()
-    customerInfo.value.email = authStore.email || ''
-  }
-  
-  // Load cart items
   cartStore.loadFromLocalStorage()
-  
-  // If cart is empty, redirect to products
-  if (!cartStore.hasItems) {
-    router.push('/products')
-  }
 })
 
-// Format price to show 2 decimal places
+// Format price
 const formatPrice = (price) => {
   return parseFloat(price || 0).toFixed(2)
 }
 
-// Generate a random order reference
-const generateOrderReference = () => {
-  const timestamp = Date.now().toString().slice(-6)
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
-  return `ORD-${timestamp}-${random}`
+// Reset order state
+const resetOrderState = () => {
+  orderError.value = null
+  orderComplete.value = false
+  isProcessing.value = false
 }
 
-// Submit the order
+// Submit order
 const submitOrder = async () => {
-  if (!cartStore.hasItems) return
-  
+  if (!acknowledgmentChecked.value) {
+    orderError.value = 'Please acknowledge the important information before proceeding.'
+    return
+  }
+
+  if (!cartStore.hasItems) {
+    orderError.value = 'Your basket is empty.'
+    return
+  }
+
   isProcessing.value = true
-  
+  orderError.value = null
+
   try {
-    // In a real app, you would send this data to your backend
+    // Prepare order data
     const orderData = {
-      customer: customerInfo.value,
-      shipping: shippingInfo.value,
+      customerInfo: {
+        firstName: customerInfo.value.firstName,
+        lastName: customerInfo.value.lastName,
+        email: customerInfo.value.email,
+        phone: customerInfo.value.phone
+      },
       items: cartStore.items,
-      total: cartStore.totalPrice,
-      date: new Date()
+      notes: customerInfo.value.notes,
+      totalAmount: cartStore.totalPrice
     }
-    
-    console.log('Order submitted:', orderData)
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Generate order reference
-    orderReference.value = generateOrderReference()
-    
-    // Clear cart after successful order
-    cartStore.clearCart()
-    
-    // Show confirmation
-    orderComplete.value = true
+
+    console.log('Submitting order:', orderData)
+
+    // Submit to API
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderData)
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.statusMessage || 'Failed to submit order')
+    }
+
+    if (result.success) {
+      // Order submitted successfully
+      orderComplete.value = true
+      orderReference.value = result.data.orderNumber
+      orderMessage.value = result.data.message
+      
+      // Clear the cart
+      cartStore.clearCart()
+      
+      console.log('Order submitted successfully:', result.data)
+    } else {
+      throw new Error(result.message || 'Failed to submit order')
+    }
+
   } catch (error) {
     console.error('Error submitting order:', error)
-    alert('There was an error processing your order. Please try again.')
+    orderError.value = error.message || 'An unexpected error occurred. Please try again.'
   } finally {
     isProcessing.value = false
   }
 }
+
+// Calculate item total
+const calculateItemTotal = (item) => {
+  let basePrice = item.product.price;
+  let optionsPrice = 0;
+  
+  if (item.customOptions && item.customOptions.length > 0) {
+    optionsPrice = item.customOptions.reduce((sum, option) => {
+      return sum + (option.priceAdjustment || 0);
+    }, 0);
+  }
+  
+  return (basePrice + optionsPrice) * item.quantity;
+}
+
+// Calculate order total
+const calculateOrderTotal = () => {
+  return cartStore.items.reduce((sum, item) => sum + calculateItemTotal(item), 0)
+}
+
+// Check if an option is a color option
+const isColorOption = (optionName) => {
+  const colorKeywords = ['color', 'colour'];
+  return colorKeywords.some(keyword => optionName.toLowerCase().includes(keyword));
+};
+
+// Get color from value
+const getColorFromValue = (value) => {
+  // Convert color names to hex values
+  const colorMap = {
+    'red': '#ef4444',
+    'blue': '#3b82f6',
+    'yellow': '#eab308',
+    'green': '#22c55e',
+    'purple': '#a855f7',
+    'pink': '#ec4899',
+    'orange': '#f97316',
+    'black': '#000000',
+    'white': '#ffffff',
+    'gray': '#6b7280',
+    'grey': '#6b7280',
+    'brown': '#92400e',
+    'navy': '#1e3a8a',
+    'teal': '#14b8a6',
+    'lime': '#84cc16',
+    'indigo': '#6366f1',
+    'cyan': '#06b6d4',
+    'rose': '#f43f5e',
+    'amber': '#f59e0b',
+    'emerald': '#10b981',
+    'slate': '#475569',
+    'zinc': '#71717a',
+    'neutral': '#737373',
+    'stone': '#78716c'
+  };
+  
+  const normalizedValue = value.toLowerCase().trim();
+  
+  // Check if it's already a hex color
+  if (normalizedValue.startsWith('#')) {
+    return normalizedValue;
+  }
+  
+  // Check if it's a CSS color name
+  if (colorMap[normalizedValue]) {
+    return colorMap[normalizedValue];
+  }
+  
+  // Default to a neutral color if not found
+  return '#6b7280';
+};
 </script>
 
 <style scoped>
@@ -413,9 +554,18 @@ const submitOrder = async () => {
   border-bottom: none;
 }
 
-.item-name {
+.item-details {
   display: flex;
   align-items: center;
+}
+
+.item-name-row {
+  display: flex;
+  align-items: center;
+}
+
+.item-name {
+  font-weight: 600;
 }
 
 .item-quantity {
@@ -427,6 +577,32 @@ const submitOrder = async () => {
   font-size: 0.8rem;
 }
 
+.item-options {
+  margin-left: 0.5rem;
+  background-color: var(--hover-bg);
+  color: var(--text-primary);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.option-detail {
+  margin-bottom: 0.25rem;
+}
+
+.option-name {
+  font-weight: 500;
+}
+
+.option-value {
+  margin-left: 0.5rem;
+}
+
+.price-adjustment {
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+}
+
 .item-price {
   font-weight: 600;
 }
@@ -434,11 +610,13 @@ const submitOrder = async () => {
 .order-total {
   display: flex;
   justify-content: space-between;
-  font-weight: 700;
+  align-items: center;
+  font-weight: 600;
   font-size: 1.1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
   color: var(--accent-primary);
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+  margin-top: 1rem;
 }
 
 .checkout-section {
@@ -666,6 +844,71 @@ input:focus {
   margin-top: 1.5rem;
 }
 
+.confirmation-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.secondary-button {
+  background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.secondary-button:hover {
+  background: linear-gradient(to right, var(--accent-secondary), var(--accent-primary));
+  transform: translateY(-2px);
+}
+
+/* Error state */
+.order-error {
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  padding: 3rem;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px var(--shadow-color);
+}
+
+.error-icon {
+  color: var(--accent-primary);
+  margin-bottom: 1.5rem;
+}
+
+.order-error h3 {
+  font-size: 1.8rem;
+  color: var(--accent-primary);
+  margin-bottom: 1rem;
+}
+
+.order-error p {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.retry-button {
+  background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.retry-button:hover {
+  background: linear-gradient(to right, var(--accent-secondary), var(--accent-primary));
+  transform: translateY(-2px);
+}
+
 @media (max-width: 768px) {
   .form-grid {
     grid-template-columns: 1fr;
@@ -688,5 +931,85 @@ input:focus {
   .order-total {
     font-size: 1rem;
   }
+}
+
+.collection-info {
+  background-color: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.collection-info p {
+  margin: 0.5rem 0;
+  color: var(--text-primary);
+}
+
+.collection-info strong {
+  color: var(--accent-primary);
+}
+
+.process-info {
+  margin-bottom: 2rem;
+}
+
+.process-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background-color: var(--accent-primary);
+  color: white;
+  border-radius: 50%;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.step-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--accent-primary);
+  font-size: 1.1rem;
+}
+
+.step-content p {
+  margin: 0;
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+/* Color swatch styles for checkout */
+.color-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-swatch-mini {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+/* Handle white color visibility in mini swatches */
+.color-swatch-mini[style*="rgb(255, 255, 255)"],
+.color-swatch-mini[style*="#ffffff"],
+.color-swatch-mini[style*="#fff"] {
+  border-color: #e5e7eb;
 }
 </style> 

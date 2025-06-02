@@ -11,6 +11,41 @@
 
       <div class="products-content">
         <div class="content-wrapper">
+          <!-- Search Bar -->
+          <div class="search-section">
+            <div class="search-container">
+              <div class="search-input-wrapper">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input 
+                  type="text" 
+                  v-model="searchQuery" 
+                  placeholder="Search products..." 
+                  class="search-input"
+                >
+                <button 
+                  v-if="searchQuery" 
+                  @click="clearSearch" 
+                  class="clear-search-btn"
+                  type="button"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+              <div v-if="searchQuery && filteredProducts.length > 0" class="search-results-count">
+                {{ filteredProducts.length }} product{{ filteredProducts.length !== 1 ? 's' : '' }} found
+              </div>
+              <div v-if="searchQuery && filteredProducts.length === 0" class="no-search-results">
+                No products found for "{{ searchQuery }}"
+              </div>
+            </div>
+          </div>
+
           <!-- Category filter -->
           <div class="category-filters">
             <button 
@@ -47,7 +82,7 @@
               <div v-for="product in filteredProducts" :key="product.id" class="product-card">
                 <NuxtLink :to="`/product/${product.id}`" class="product-link">
                   <div class="product-image">
-                    <img v-if="product.image" :src="product.image" :alt="product.name">
+                    <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.name">
                     <div v-else class="no-image">
                       <span>No image available</span>
                     </div>
@@ -55,22 +90,49 @@
                   <div class="product-info">
                     <h3>{{ product.name }}</h3>
                     <span class="price">£{{ formatPrice(product.price) }}</span>
-                    <p v-if="product.categoryName" class="category-tag">{{ product.categoryName }}</p>
+                    <p v-if="product.category" class="category-tag">{{ product.category.name }}</p>
                     <p class="description">{{ product.description }}</p>
 
                     <div class="product-features" v-if="product.customizable">
                       <span class="feature-badge">Customizable</span>
                     </div>
+                    
+                    <!-- Customization Required Indicator -->
+                    <div v-if="hasRequiredCustomization(product)" class="customization-notice">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      <span>Customization required</span>
+                    </div>
                   </div>
                 </NuxtLink>
-                <div v-if="isAuthenticated" class="product-actions">
-                  <button @click="bookProduct(product)" class="book-button">
-                    Add to Booking
-                  </button>
-                </div>
+                
+                <!-- Product Actions -->
                 <div class="product-actions">
-                  <button @click="addToCart(product)" class="cart-button">
-                    Add to Cart
+                  <button 
+                    v-if="product.canBuy"
+                    @click="addToOrder(product)" 
+                    class="order-button"
+                  >
+                    {{ hasRequiredCustomization(product) ? 'Customize & Order' : 'Add to Order' }}
+                  </button>
+                  
+                  <button 
+                    v-if="product.canHire"
+                    @click="addToEvent(product)" 
+                    class="event-button"
+                  >
+                    {{ hasRequiredCustomization(product) ? 'Customize & Add to Event' : 'Add to Event' }}
+                  </button>
+                  
+                  <button 
+                    v-if="!product.canBuy && !product.canHire"
+                    @click="contactForQuote(product)" 
+                    class="contact-button"
+                  >
+                    Contact for Quote
                   </button>
                 </div>
               </div>
@@ -88,8 +150,16 @@
 
     <!-- Toast Notifications -->
     <div class="toast-container">
-      <div v-for="(toast, index) in toasts" :key="index" class="toast">
-        <span class="toast-icon">✓</span>
+      <div v-for="(toast, index) in toasts" :key="index" :class="['toast', `toast-${toast.type}`]">
+        <span class="toast-icon">
+          <svg v-if="toast.type === 'redirect'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12,6 12,12 16,14"></polyline>
+          </svg>
+          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20,6 9,17 4,12"></polyline>
+          </svg>
+        </span>
         <span>{{ toast.message }}</span>
       </div>
     </div>
@@ -99,13 +169,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useProductsStore } from '../stores/products';
 import { useAuthStore } from '../stores/auth';
 import { useCartStore } from '../stores/cart';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
+const route = useRoute();
 const productsStore = useProductsStore();
 const authStore = useAuthStore();
 const cartStore = useCartStore();
@@ -113,6 +184,7 @@ const cartStore = useCartStore();
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 const selectedCategory = ref('');
 const toasts = ref([]);
+const searchQuery = ref('');
 
 // Available product categories
 const availableCategories = computed(() => {
@@ -120,14 +192,28 @@ const availableCategories = computed(() => {
   return productsStore.categories || [];
 });
 
-// Filtered products based on selected category
+// Filtered products based on selected category and search query
 const filteredProducts = computed(() => {
-  if (!selectedCategory.value) {
-    return productsStore.products;
+  let products = productsStore.products;
+  
+  // Filter by category if selected
+  if (selectedCategory.value) {
+    products = products.filter(product => 
+      product.categoryId === selectedCategory.value || product.category === selectedCategory.value
+    );
   }
-  return productsStore.products.filter(product => 
-    product.categoryId === selectedCategory.value || product.category === selectedCategory.value
-  );
+  
+  // Filter by search query if provided
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase().trim();
+    products = products.filter(product => 
+      product.name.toLowerCase().includes(query) ||
+      (product.description && product.description.toLowerCase().includes(query)) ||
+      (product.category && product.category.name && product.category.name.toLowerCase().includes(query))
+    );
+  }
+  
+  return products;
 });
 
 // Format price to show 2 decimal places
@@ -143,40 +229,88 @@ const loadProducts = async () => {
   console.log('Categories loaded:', productsStore.categories.length);
 };
 
-// Navigate to booking page with selected product
-const bookProduct = (product) => {
-  if (!isAuthenticated.value) {
-    router.push('/login');
+// Add product to order (for purchases)
+const addToOrder = (product) => {
+  // Check if product has custom options that need to be filled
+  if (hasRequiredCustomization(product)) {
+    // Redirect to product detail page for customization
+    router.push(`/product/${product.id}`);
+    showToast(`${product.name} requires customization - redirecting to product page`, 'redirect');
     return;
   }
   
+  cartStore.addToCart(product);
+  showToast(`${product.name} added to your order`);
+  router.push('/basket');
+};
+
+// Add product to event (for hire)
+const addToEvent = (product) => {
+  // Check if product has custom options that need to be filled
+  if (hasRequiredCustomization(product)) {
+    // Redirect to product detail page for customization
+    router.push(`/product/${product.id}`);
+    showToast(`${product.name} requires customization - redirecting to product page`, 'redirect');
+    return;
+  }
+  
+  // Store in localStorage for event booking
+  const currentEvent = JSON.parse(localStorage.getItem('currentEvent') || '{"items": []}');
+  currentEvent.items.push({
+    ...product,
+    quantity: 1,
+    selectedOptions: {}
+  });
+  localStorage.setItem('currentEvent', JSON.stringify(currentEvent));
+  
+  showToast(`${product.name} added to your event`);
+  router.push('/booking');
+};
+
+// Check if product has required customization
+const hasRequiredCustomization = (product) => {
+  // Check if product has custom options
+  if (product.options && product.options.length > 0) {
+    // Check if any option is required
+    return product.options.some(option => option.required);
+  }
+  
+  return false;
+};
+
+// Contact for quote
+const contactForQuote = (product) => {
   router.push({
-    path: '/booking',
-    query: { product: product.id }
+    path: '/contact',
+    query: { product: product.id, inquiry: 'quote' }
   });
 };
 
-// Add product to cart
-const addToCart = (product) => {
-  cartStore.addToCart(product);
-  showToast(`${product.name} added to your cart`);
-};
-
 // Display toast notification
-const showToast = (message) => {
-  const toast = { message };
+const showToast = (message, type = 'success') => {
+  const toast = { message, type };
   toasts.value.push(toast);
   setTimeout(() => {
     const index = toasts.value.indexOf(toast);
     if (index !== -1) {
       toasts.value.splice(index, 1);
     }
-  }, 3000);
+  }, type === 'redirect' ? 4000 : 3000); // Show redirect messages longer
+};
+
+// Clear search
+const clearSearch = () => {
+  searchQuery.value = '';
 };
 
 onMounted(async () => {
   // Load cart from localStorage
   cartStore.loadFromLocalStorage();
+  
+  // Check for search query in URL parameters
+  if (route.query.search) {
+    searchQuery.value = route.query.search;
+  }
   
   // Load products
   await loadProducts();
@@ -239,6 +373,84 @@ onMounted(async () => {
 .content-wrapper {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.search-section {
+  margin-bottom: 2rem;
+}
+
+.search-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 50px;
+  padding: 0.75rem 1.25rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-input-wrapper:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb, 184, 134, 11), 0.1);
+}
+
+.search-icon {
+  color: var(--text-secondary);
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 1rem;
+  color: var(--text-primary);
+  padding: 0;
+}
+
+.search-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.clear-search-btn {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-search-btn:hover {
+  background-color: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.search-results-count {
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.no-search-results {
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--text-secondary);
+  font-style: italic;
 }
 
 .category-filters {
@@ -370,6 +582,24 @@ onMounted(async () => {
   border: 1px solid var(--border-color);
 }
 
+.customization-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background-color: rgba(var(--accent-primary-rgb, 184, 134, 11), 0.1);
+  border: 1px solid var(--accent-primary);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--accent-primary);
+  font-weight: 500;
+}
+
+.customization-notice svg {
+  flex-shrink: 0;
+}
+
 .product-link {
   display: block;
   text-decoration: none;
@@ -387,38 +617,48 @@ onMounted(async () => {
   border-top: 1px solid var(--border-color);
 }
 
-.book-button {
+.order-button, .event-button, .contact-button {
   width: 100%;
   padding: 0.75rem;
-  background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
-  color: white;
   border: none;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
 }
 
-.book-button:hover {
+.order-button {
+  background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+  color: white;
+}
+
+.event-button {
+  background-color: var(--bg-secondary);
+  color: var(--accent-primary);
+  border: 2px solid var(--accent-primary);
+}
+
+.contact-button {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+}
+
+.order-button:hover {
   background: linear-gradient(to right, var(--accent-secondary), var(--accent-primary));
   transform: translateY(-2px);
 }
 
-.cart-button {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: var(--bg-secondary);
-  color: var(--accent-primary);
-  border: 1px solid var(--accent-primary);
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease;
-  margin-top: 0.5rem;
+.event-button:hover {
+  background-color: rgba(var(--accent-primary-rgb, 184, 134, 11), 0.1);
+  transform: translateY(-2px);
 }
 
-.cart-button:hover {
-  background-color: rgba(var(--accent-primary-rgb, 184, 134, 11), 0.1);
+.contact-button:hover {
+  background-color: var(--hover-bg);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
   transform: translateY(-2px);
 }
 
@@ -561,9 +801,16 @@ onMounted(async () => {
   max-width: 300px;
 }
 
+.toast-redirect {
+  background-color: #3b82f6;
+  animation: slideIn 0.3s ease, fadeOut 0.5s ease 3.5s forwards;
+}
+
 .toast-icon {
   margin-right: 10px;
   font-size: 1.2rem;
+  display: flex;
+  align-items: center;
 }
 
 @keyframes slideIn {

@@ -1,50 +1,49 @@
 import prisma from '../../../lib/prisma'
-import jwt from 'jsonwebtoken'
+import { requireAuth, checkRateLimit, getClientIP } from '../../utils/auth'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get token from cookie
-    const token = getCookie(event, 'token')
+    // Apply rate limiting for authentication checks
+    const clientIP = getClientIP(event) || 'unknown'
+    checkRateLimit(`auth-me-${clientIP}`, 30, 60000) // 30 requests per minute per IP
 
-    if (!token) {
-      return createError({
-        statusCode: 401,
-        message: 'Unauthorized'
+    // Only allow GET method
+    if (getMethod(event) !== 'GET') {
+      throw createError({
+        statusCode: 405,
+        statusMessage: 'Method not allowed'
       })
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, useRuntimeConfig().jwtSecret)
+    // Require authentication using centralized utility
+    const user = await requireAuth(event)
 
-    // Get account from database
-    const account = await prisma.account.findUnique({
-      where: { id: decoded.id }
-    })
-
-    if (!account) {
-      return createError({
-        statusCode: 401,
-        message: 'Account not found'
-      })
-    }
+    console.log(`Auth check successful for user: ${user.email}`)
 
     // Return account data (excluding password)
     return {
       success: true,
       data: {
-        id: account.id,
-        email: account.email,
-        firstName: account.firstName,
-        lastName: account.lastName,
-        role: account.role,
-        accessLevel: account.accessLevel
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        accessLevel: user.accessLevel,
+        createdAt: user.createdAt
       }
     }
   } catch (error) {
     console.error('Error verifying token:', error)
-    return createError({
+    
+    // Don't expose internal errors to client
+    if (error.statusCode) {
+      throw error
+    }
+    
+    throw createError({
       statusCode: 401,
-      message: 'Invalid token'
+      statusMessage: 'Invalid token'
     })
   } finally {
     await prisma.$disconnect()

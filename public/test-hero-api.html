@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hero API Test</title>
+</head>
+<body>
+    <h1>Hero API Test</h1>
+    <div id="result"></div>
+    <button onclick="testHeroAPI()">Test Hero API</button>
+
+    <script>
+        async function testHeroAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch('/api/hero');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h2>✅ Success!</h2>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h2>❌ Error ${response.status}</h2>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h2>❌ Network Error</h2>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        // Test on page load
+        testHeroAPI();
+    </script>
+</body>
+</html> 

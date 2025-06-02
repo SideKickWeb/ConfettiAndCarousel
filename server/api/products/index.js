@@ -27,22 +27,63 @@ export default defineEventHandler(async (event) => {
       const products = await prisma.product.findMany({
         where: whereClause,
         include: {
-          ProductCategory: true
+          ProductCategory: true,
+          ProductOption: {
+            include: {
+              ProductOptionValue: {
+                orderBy: {
+                  sortOrder: 'asc'
+                }
+              }
+            },
+            orderBy: {
+              sortOrder: 'asc'
+            }
+          }
         },
         orderBy: {
           name: 'asc'
         }
       })
       
-      // Format products to include category information
+      // Format products to include all relevant information including custom fields
       const formattedProducts = products.map(product => ({
         id: product.id,
         name: product.name,
         description: product.description,
         price: product.price,
-        image: product.imageUrl,
-        categoryId: product.categoryId,
-        categoryName: product.ProductCategory?.name || null
+        imageUrl: product.imageUrl,
+        active: product.active,
+        canBuy: product.canBuy,
+        canHire: product.canHire,
+        hasRangePrice: product.hasRangePrice,
+        hasUnitPrice: product.hasUnitPrice,
+        maxPrice: product.maxPrice,
+        minPrice: product.minPrice,
+        minQuantity: product.minQuantity,
+        unitPrice: product.unitPrice,
+        unitType: product.unitType,
+        category: product.ProductCategory ? {
+          id: product.ProductCategory.id,
+          name: product.ProductCategory.name,
+          description: product.ProductCategory.description
+        } : null,
+        options: product.ProductOption.map(option => ({
+          id: option.id,
+          name: option.name,
+          type: option.type,
+          required: option.required,
+          sortOrder: option.sortOrder,
+          values: option.ProductOptionValue.map(value => ({
+            id: value.id,
+            value: value.value,
+            label: value.label || value.value,
+            priceAdjustment: value.priceAdjustment || 0,
+            sortOrder: value.sortOrder
+          }))
+        })),
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt
       }))
       
       console.log(`API: Successfully fetched ${formattedProducts.length} products from database`)

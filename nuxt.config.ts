@@ -1,68 +1,57 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  devtools: { enabled: process.env.NODE_ENV !== 'production' },
-  components: true,
-  css: [
-    '~/assets/css/main.css',
-  ],
+  devtools: { enabled: true },
+  css: ['~/assets/css/main.css'],
   modules: [
-    '@pinia/nuxt',
+    '@pinia/nuxt'
   ],
-  postcss: {
-    plugins: {
-      tailwindcss: {},
-      autoprefixer: {},
+  runtimeConfig: {
+    jwtSecret: process.env.JWT_SECRET || 'your-fallback-secret-key',
+    public: {
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3000'
+    }
+  },
+  // Nitro server configuration
+  nitro: {
+    experimental: {
+      wasm: true
+    }
+  },
+  // Server-side rendering options
+  ssr: true,
+  // Additional security configurations
+  experimental: {
+    payloadExtraction: false // Prevents payload extraction attacks
+  },
+  // Additional route rules for security
+  routeRules: {
+    // Add security headers to all routes
+    '/**': {
+      headers: {
+        'X-Frame-Options': 'DENY',
+        'X-Content-Type-Options': 'nosniff',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'X-XSS-Protection': '1; mode=block',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+      }
     },
+    // API routes should have additional security
+    '/api/**': {
+      headers: {
+        'X-Frame-Options': 'DENY',
+        'X-Content-Type-Options': 'nosniff',
+        'Cache-Control': 'no-store, no-cache, must-revalidate'
+      }
+    }
+  },
+  vue: {
+    compilerOptions: {
+      isCustomElement: (tag) => ['swiper-container', 'swiper-slide'].includes(tag)
+    }
   },
   vite: {
-    vue: {
-      script: {
-        defineModel: true,
-        propsDestructure: true
-      }
-    },
-    optimizeDeps: {
-      exclude: ['@prisma/client']
-    },
     build: {
-      rollupOptions: {
-        external: ['@prisma/client']
-      }
-    },
-    ssr: {
-      noExternal: true
-    }
-  },
-  nitro: {
-    esbuild: {
-      options: {
-        target: 'es2019'
-      }
-    },
-    prerender: {
-      crawlLinks: false,
-      routes: ['/'],
-    }
-  },
-  runtimeConfig: {
-    jwtSecret: process.env.JWT_SECRET || 'development-secret-key',
-    public: {
-      apiBase: process.env.API_BASE || ''
-    }
-  },
-  app: {
-    head: {
-      title: 'My Nuxt Website',
-      meta: [
-        { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover' },
-        { name: 'format-detection', content: 'telephone=no' },
-        { name: 'theme-color', content: '#b8860b' }
-      ],
-      link: [],
-      style: [],
-      script: [],
-      noscript: []
+      target: 'es2019'
     }
   },
   compatibilityDate: '2024-11-01'
