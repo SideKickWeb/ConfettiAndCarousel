@@ -1,4 +1,4 @@
-import prisma from '../../lib/prisma.js'
+import prisma from '../../lib/prisma'
 import { randomUUID } from 'crypto'
 
 export default defineEventHandler(async (event) => {
