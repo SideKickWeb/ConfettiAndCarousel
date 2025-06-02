@@ -22,6 +22,10 @@ export default defineNuxtConfig({
       options: {
         target: 'es2020'
       }
+    },
+    // Exclude Prisma from bundling completely
+    externals: {
+      inline: ['@prisma/client', '.prisma/client']
     }
   },
   // Server-side rendering options
@@ -58,14 +62,17 @@ export default defineNuxtConfig({
   },
   vite: {
     build: {
-      target: 'es2020'
+      target: 'es2020',
+      rollupOptions: {
+        external: ['@prisma/client', '.prisma/client']
+      }
     },
     define: {
       global: 'globalThis'
+    },
+    optimizeDeps: {
+      exclude: ['@prisma/client', '.prisma/client']
     }
-  },
-  build: {
-    transpile: ['@prisma/client']
   },
   compatibilityDate: '2024-11-01'
 })

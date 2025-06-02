@@ -8,9 +8,8 @@ declare global {
   var __globalPrisma__: PrismaClient | undefined
 }
 
-const prisma = global.__globalPrisma__ || new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-})
+// Simplified Prisma client for Vercel compatibility
+const prisma = global.__globalPrisma__ || new PrismaClient()
 
 if (process.env.NODE_ENV !== 'production') {
   global.__globalPrisma__ = prisma
