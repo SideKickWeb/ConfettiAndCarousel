@@ -1,6 +1,8 @@
 {
   "buildCommand": "npm run build",
+  "installCommand": "npm install && npx prisma generate",
   "env": {
-    "PRISMA_CLI_BINARY_TARGETS": "rhel-openssl-1.0.x,native,linux-musl"
+    "PRISMA_CLI_BINARY_TARGETS": "rhel-openssl-1.0.x,native,linux-musl",
+    "NODE_ENV": "production"
   }
 } 

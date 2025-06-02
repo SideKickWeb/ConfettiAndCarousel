@@ -1,3 +1,5 @@
+import { defineNuxtConfig } from 'nuxt/config'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
@@ -15,13 +17,6 @@ export default defineNuxtConfig({
   nitro: {
     experimental: {
       wasm: true
-    },
-    // Vercel-specific configuration
-    preset: 'vercel',
-    esbuild: {
-      options: {
-        target: 'es2020'
-      }
     }
   },
   // Server-side rendering options
@@ -53,7 +48,7 @@ export default defineNuxtConfig({
   },
   vue: {
     compilerOptions: {
-      isCustomElement: (tag) => ['swiper-container', 'swiper-slide'].includes(tag)
+      isCustomElement: (tag: string) => ['swiper-container', 'swiper-slide'].includes(tag)
     }
   },
   vite: {
@@ -63,6 +58,9 @@ export default defineNuxtConfig({
     define: {
       global: 'globalThis'
     }
+  },
+  build: {
+    transpile: ['@prisma/client']
   },
   compatibilityDate: '2024-11-01'
 })
