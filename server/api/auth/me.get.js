@@ -1,4 +1,4 @@
-import prisma from '../../../lib/prisma'
+import prisma from '../../../lib/prisma.js'
 import { requireAuth, checkRateLimit, getClientIP } from '../../utils/auth'
 
 export default defineEventHandler(async (event) => {
