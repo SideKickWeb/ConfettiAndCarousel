@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../../../lib/prisma'
 import bcrypt from 'bcryptjs'
 import { requireAuth, validateInput, checkRateLimit, getClientIP } from '../../utils/auth'
 import { 
@@ -8,9 +8,6 @@ import {
   createUserFriendlyError,
   ERROR_CATEGORIES 
 } from '../../utils/error-handling'
-
-// Initialize Prisma client properly
-const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
   try {
@@ -165,7 +162,5 @@ export default defineEventHandler(async (event) => {
     
     // Use centralized error handling
     handleSafeError(error, 'SERVER_ERROR')
-  } finally {
-    await prisma.$disconnect()
   }
 }) 

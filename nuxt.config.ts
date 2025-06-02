@@ -17,6 +17,10 @@ export default defineNuxtConfig({
   nitro: {
     experimental: {
       wasm: true
+    },
+    // Exclude Prisma from bundling
+    externals: {
+      inline: ['@prisma/client']
     }
   },
   // Server-side rendering options
@@ -57,6 +61,17 @@ export default defineNuxtConfig({
     },
     define: {
       global: 'globalThis'
+    },
+    resolve: {
+      alias: {
+        '.prisma/client/index-browser': '.prisma/client/index.js'
+      }
+    },
+    optimizeDeps: {
+      exclude: ['@prisma/client', '.prisma/client']
+    },
+    ssr: {
+      noExternal: ['@prisma/client']
     }
   },
   build: {

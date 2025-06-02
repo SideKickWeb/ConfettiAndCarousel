@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../lib/prisma'
 import { requireAdmin, validateInput, checkRateLimit, getClientIP } from '../../utils/auth';
 import { 
   handleSafeError, 
@@ -8,8 +8,6 @@ import {
 } from '../../utils/error-handling';
 
 export default defineEventHandler(async (event) => {
-  const prisma = new PrismaClient();
-  
   try {
     // Apply rate limiting for admin operations
     const clientIP = getClientIP(event) || 'unknown';
@@ -150,7 +148,5 @@ export default defineEventHandler(async (event) => {
     
     // Use centralized error handling
     handleSafeError(error, 'SERVER_ERROR');
-  } finally {
-    await prisma.$disconnect();
   }
 }); 

@@ -1,9 +1,6 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../../../lib/prisma'
 import { requireAuth, checkRateLimit, getClientIP } from '../../utils/auth'
 import { handleSafeError, handleMethodNotAllowed } from '../../utils/error-handling'
-
-// Initialize Prisma client properly
-const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
   try {
@@ -97,8 +94,5 @@ export default defineEventHandler(async (event) => {
     
     // Use centralized error handling
     handleSafeError(error, 'SERVER_ERROR')
-  } finally {
-    // Disconnect prisma client
-    await prisma.$disconnect()
   }
 }) 
