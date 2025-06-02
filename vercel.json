@@ -4,12 +4,10 @@
   "env": {
     "PRISMA_CLI_BINARY_TARGETS": "rhel-openssl-1.0.x,native,linux-musl",
     "PRISMA_QUERY_ENGINE_LIBRARY": "rhel-openssl-1.0.x",
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "SKIP_ENV_VALIDATION": "1"
   },
   "regions": ["iad1"],
-  "functions": {
-    "server/**": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  "crons": [],
+  "framework": "nuxtjs"
 } 

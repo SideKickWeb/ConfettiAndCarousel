@@ -2,7 +2,7 @@ import { defineNuxtConfig } from 'nuxt/config'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   css: ['~/assets/css/main.css'],
   modules: [
     '@pinia/nuxt'
@@ -23,9 +23,8 @@ export default defineNuxtConfig({
         target: 'es2020'
       }
     },
-    // Exclude Prisma from bundling completely
     externals: {
-      inline: ['@prisma/client', '.prisma/client']
+      inline: ['@prisma/client']
     }
   },
   // Server-side rendering options
@@ -62,16 +61,15 @@ export default defineNuxtConfig({
   },
   vite: {
     build: {
-      target: 'es2020',
-      rollupOptions: {
-        external: ['@prisma/client', '.prisma/client']
-      }
+      target: 'es2020'
     },
     define: {
       global: 'globalThis'
     },
-    optimizeDeps: {
-      exclude: ['@prisma/client', '.prisma/client']
+    resolve: {
+      alias: {
+        '@prisma/client/index-browser': '@prisma/client'
+      }
     }
   },
   compatibilityDate: '2024-11-01'
