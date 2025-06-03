@@ -1,4 +1,10 @@
-import prisma from '../../lib/prisma.js'
+import { requireAuth, validateInput, checkRateLimit, getClientIP } from '../../utils/auth'
+import { 
+  handleSafeError, 
+  handleMethodNotAllowed,
+  createUserFriendlyError,
+  ERROR_CATEGORIES 
+} from '../../utils/error-handling'
 import { getMethod, readBody, getQuery, getCookie } from 'h3'
 import jwt from 'jsonwebtoken'
 import { randomUUID } from 'crypto'
@@ -6,143 +12,139 @@ import { randomUUID } from 'crypto'
 const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-key'
 
 export default defineEventHandler(async (event) => {
-  const method = getMethod(event)
-
-  // Get user from token
-  const token = getCookie(event, 'token')
-  if (!token) {
-    return createError({
-      statusCode: 401,
-      message: 'Unauthorized: No token provided'
-    })
-  }
-
-  let userId
   try {
-    const decoded = jwt.verify(token, JWT_SECRET)
-    userId = decoded.userId
-  } catch (error) {
-    return createError({
-      statusCode: 401,
-      message: 'Unauthorized: Invalid token'
-    })
-  }
+    const method = getMethod(event)
+    
+    // Apply rate limiting
+    const clientIP = getClientIP(event) || 'unknown'
+    checkRateLimit(`bookings-${clientIP}`, 10, 60000) // 10 requests per minute
 
-  // GET - Retrieve events (bookings) for the user
-  if (method === 'GET') {
-    try {
-      const query = getQuery(event)
-      const limit = parseInt(query.limit) || 10
-      const offset = parseInt(query.offset) || 0
+    // GET - Fetch bookings
+    if (method === 'GET') {
+      // Dynamic Prisma import
+      const { getPrismaClient } = await import('../../lib/prisma.js')
+      const prisma = await getPrismaClient()
+
+      console.log('Fetching all bookings')
       
-      // Find customer by user account
-      const customer = await prisma.customer.findFirst({
-        where: {
-          // Assuming there's a relationship between account and customer
-          // For now, we'll just return events without filtering by user
-        }
-      })
-      
-      const events = await prisma.event.findMany({
+      const bookings = await prisma.booking.findMany({
         include: {
           Customer: true,
-          EventItem: {
-            include: {
-              Product: true
-            }
-          }
+          Event: true
         },
         orderBy: {
           createdAt: 'desc'
-        },
-        skip: offset,
-        take: limit
+        }
       })
-      
-      return events
-    } catch (error) {
-      console.error('Error retrieving events:', error)
-      return createError({
-        statusCode: 500,
-        message: 'Failed to retrieve events'
-      })
+
+      return {
+        success: true,
+        data: bookings,
+        count: bookings.length
+      }
     }
-  }
-  
-  // POST - Create a new event (booking)
-  if (method === 'POST') {
-    try {
-      const data = await readBody(event)
+
+    // POST - Create new booking
+    if (method === 'POST') {
+      // Require authentication for creating bookings
+      const user = await requireAuth(event)
       
-      // Validate required fields
-      if (!data.eventType || !data.date || !data.location) {
-        return createError({
-          statusCode: 400,
-          message: 'Missing required booking information'
+      const body = await readBody(event)
+      
+      // Dynamic Prisma import
+      const { getPrismaClient } = await import('../../lib/prisma.js')
+      const prisma = await getPrismaClient()
+
+      // Validate input
+      const validatedData = validateInput(body, {
+        eventId: { 
+          required: true, 
+          type: 'string',
+          label: 'Event'
+        },
+        numberOfGuests: { 
+          required: true, 
+          type: 'number',
+          label: 'Number of guests'
+        },
+        specialRequests: { 
+          required: false, 
+          type: 'string',
+          maxLength: 500,
+          label: 'Special requests'
+        },
+        contactPhone: {
+          required: false,
+          type: 'string',
+          maxLength: 20,
+          label: 'Contact phone'
+        }
+      })
+
+      // Check if event exists and is available
+      const event = await prisma.event.findUnique({
+        where: { id: validatedData.eventId }
+      })
+
+      if (!event) {
+        throw createUserFriendlyError('EVENT_NOT_FOUND', 404, ERROR_CATEGORIES.VALIDATION, {
+          message: 'The selected event is no longer available.'
         })
       }
-      
-      // Create event and items in a transaction
-      const event = await prisma.$transaction(async (prisma) => {
-        // Create the event
-        const newEvent = await prisma.event.create({
+
+      // Check if event is still available for booking
+      if (!event.active) {
+        throw createUserFriendlyError('EVENT_UNAVAILABLE', 400, ERROR_CATEGORIES.VALIDATION, {
+          message: 'This event is no longer available for booking.'
+        })
+      }
+
+      // Find or create customer record
+      let customer = await prisma.customer.findUnique({
+        where: { email: user.email }
+      })
+
+      if (!customer) {
+        customer = await prisma.customer.create({
           data: {
-            id: randomUUID(),
-            title: data.eventType,
-            startDate: new Date(data.date),
-            startTime: data.time || '',
-            location: data.location,
-            description: data.additionalInfo,
-            status: 'pending',
-            totalAmount: data.items ? data.items.reduce((sum, item) => sum + (item.price * item.quantity), 0) : 0,
-            updatedAt: new Date()
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: validatedData.contactPhone || ''
           }
         })
-        
-        // Create event items if provided
-        if (data.items && data.items.length > 0) {
-          for (const item of data.items) {
-            await prisma.eventItem.create({
-              data: {
-                id: randomUUID(),
-                eventId: newEvent.id,
-                productId: item.id,
-                quantity: item.quantity,
-                unitPrice: item.price,
-                totalPrice: item.price * item.quantity
-              }
-            })
-          }
+      }
+
+      // Create the booking
+      const booking = await prisma.booking.create({
+        data: {
+          customerId: customer.id,
+          eventId: validatedData.eventId,
+          numberOfGuests: validatedData.numberOfGuests,
+          specialRequests: validatedData.specialRequests || '',
+          status: 'pending',
+          totalAmount: event.price * validatedData.numberOfGuests
+        },
+        include: {
+          Customer: true,
+          Event: true
         }
-        
-        return prisma.event.findUnique({
-          where: {
-            id: newEvent.id
-          },
-          include: {
-            Customer: true,
-            EventItem: {
-              include: {
-                Product: true
-              }
-            }
-          }
-        })
       })
-      
-      return event
-    } catch (error) {
-      console.error('Error creating event:', error)
-      return createError({
-        statusCode: 500,
-        message: 'Failed to create event: ' + error.message
-      })
+
+      console.log(`Booking created: ${booking.id} for customer: ${customer.email}`)
+
+      return {
+        success: true,
+        data: booking,
+        message: 'Your booking has been submitted successfully! We will contact you shortly to confirm the details.'
+      }
     }
+
+    // Method not allowed
+    throw handleMethodNotAllowed(method, ['GET', 'POST'])
+
+  } catch (error) {
+    console.error('Bookings API error:', error)
+    handleSafeError(error, 'SERVER_ERROR')
   }
-  
-  // Method not allowed
-  return createError({
-    statusCode: 405,
-    message: 'Method not allowed'
-  })
 }) 

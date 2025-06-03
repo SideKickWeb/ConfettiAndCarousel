@@ -1,65 +1,50 @@
-import prisma from '../../lib/prisma.js'
-import { randomUUID } from 'crypto'
-
 export default defineEventHandler(async (event) => {
   try {
-    // Get the active hero settings from the database
-    let heroSettings = await prisma.heroSetting.findFirst({
-      where: { active: true }
-    })
-    
-    // If no active settings found, try to get any hero setting
-    if (!heroSettings) {
-      console.log('No active hero settings found, checking for any hero settings')
-      heroSettings = await prisma.heroSetting.findFirst()
-    }
-    
-    // If still no settings, create one
-    if (!heroSettings) {
-      console.log('No hero settings found, creating default')
-      try {
-        heroSettings = await prisma.heroSetting.create({
-          data: {
-            id: randomUUID(),
-            imageUrl: '/images/gallery/wedding1.jpg',
-            title: 'Create Unforgettable Events',
-            description: 'Premium event decorations and equipment to make your special day truly memorable.',
-            buttonText: 'Browse Products',
-            buttonLink: '/products',
-            textPosition: 'left',
-            active: true,
-            updatedAt: new Date()
-          }
-        })
-        console.log('Created default hero settings:', heroSettings)
-      } catch (createError) {
-        console.error('Error creating hero settings:', createError)
-        // Return default values if creation fails
-        return {
-          imageUrl: '/images/gallery/wedding1.jpg',
-          title: 'Create Unforgettable Events',
-          description: 'Premium event decorations and equipment to make your special day truly memorable.',
-          buttonText: 'Browse Products',
-          buttonLink: '/products',
-          textPosition: 'left'
+    const method = getMethod(event);
+
+    // GET - Fetch active hero settings
+    if (method === 'GET') {
+      console.log('Fetching hero settings');
+      
+      // Dynamic Prisma import
+      const { getPrismaClient } = await import('../lib/prisma.js')
+      const prisma = await getPrismaClient()
+      
+      const settings = await prisma.heroSetting.findFirst({
+        where: { active: true },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          imageUrl: true,
+          buttonText: true,
+          buttonLink: true,
+          textPosition: true,
+          active: true,
+          createdAt: true,
+          updatedAt: true
         }
-      }
+      });
+      
+      return { 
+        success: true, 
+        data: settings 
+      };
     }
-    
-    return heroSettings
-  } catch (error) {
-    console.error('Error fetching hero settings:', error)
-    
-    // Return fallback content in case of an error
+
+    // Method not allowed
     return {
-      imageUrl: '/images/gallery/wedding1.jpg',
-      title: 'Create Unforgettable Events',
-      description: 'Premium event decorations and equipment to make your special day truly memorable.',
-      buttonText: 'Browse Products',
-      buttonLink: '/products',
-      textPosition: 'left'
-    }
-  } finally {
-    await prisma.$disconnect()
+      success: false,
+      message: 'Method not allowed'
+    };
+    
+  } catch (error) {
+    console.error('Error with hero settings:', error);
+    
+    return {
+      success: false,
+      message: 'Failed to fetch hero settings',
+      error: error.message
+    };
   }
-}) 
+}); 
