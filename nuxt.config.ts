@@ -21,6 +21,20 @@ export default defineNuxtConfig({
     },
     externals: {
       inline: ['@prisma/client']
+    },
+    rollupConfig: {
+      external: ['.prisma/client', '.prisma'],
+      plugins: [
+        {
+          name: 'prisma-nitro-resolver',
+          resolveId(id) {
+            // Handle .prisma imports
+            if (id === '.prisma' || id === '.prisma/client' || id.startsWith('.prisma/')) {
+              return { id: '@prisma/client', external: false }
+            }
+          }
+        }
+      ]
     }
   },
   // Server-side rendering options
