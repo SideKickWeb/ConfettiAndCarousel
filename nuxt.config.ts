@@ -20,7 +20,7 @@ export default defineNuxtConfig({
       wasm: true
     },
     rollupConfig: {
-      external: ['@prisma/client', '.prisma']
+      external: ['@prisma/client', '.prisma/client', '.prisma']
     }
   },
   // Server-side rendering options
@@ -53,11 +53,6 @@ export default defineNuxtConfig({
   vue: {
     compilerOptions: {
       isCustomElement: (tag: string) => ['swiper-container', 'swiper-slide'].includes(tag)
-    }
-  },
-  vite: {
-    optimizeDeps: {
-      exclude: ['@prisma/client']
     }
   },
   compatibilityDate: '2024-11-01'
