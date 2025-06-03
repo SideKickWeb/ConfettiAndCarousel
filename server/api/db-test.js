@@ -1,7 +1,9 @@
-import prisma from '../lib/prisma.js'
-
 export default defineEventHandler(async (event) => {
   try {
+    // Dynamic Prisma import
+    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const prisma = await getPrismaClient()
+    
     // Test database connection
     await prisma.$connect()
     console.log('Database connection successful')
@@ -26,7 +28,5 @@ export default defineEventHandler(async (event) => {
         meta: error.meta
       }
     })
-  } finally {
-    await prisma.$disconnect()
   }
 }) 
