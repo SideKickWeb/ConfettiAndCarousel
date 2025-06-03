@@ -1,5 +1,3 @@
-import prisma from '../../lib/prisma.js'
-
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
   const params = event.context.params || {}
@@ -11,6 +9,10 @@ export default defineEventHandler(async (event) => {
       message: 'Invalid event ID'
     }
   }
+
+  // Dynamic Prisma import
+  const { getPrismaClient } = await import('../../../lib/prisma.js')
+  const prisma = await getPrismaClient()
 
   // GET - Fetch a specific event
   if (method === 'GET') {

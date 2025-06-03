@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
     console.log(`Registration attempt for email: ${email}`)
 
     // Dynamic Prisma import
-    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const { getPrismaClient } = await import('../../../lib/prisma.js')
     const prisma = await getPrismaClient()
 
     // Check if user already exists

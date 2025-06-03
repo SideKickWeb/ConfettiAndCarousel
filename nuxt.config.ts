@@ -18,6 +18,9 @@ export default defineNuxtConfig({
     preset: 'vercel',
     experimental: {
       wasm: true
+    },
+    rollupConfig: {
+      external: ['@prisma/client', '.prisma']
     }
   },
   // Server-side rendering options

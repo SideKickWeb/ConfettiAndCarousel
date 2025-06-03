@@ -1,6 +1,8 @@
-import prisma from '../../lib/prisma.js'
-
 export default defineEventHandler(async (event) => {
+  // Dynamic Prisma import
+  const { getPrismaClient } = await import('../../../lib/prisma.js')
+  const prisma = await getPrismaClient()
+
   try {
     const products = await prisma.product.findMany({
       include: {

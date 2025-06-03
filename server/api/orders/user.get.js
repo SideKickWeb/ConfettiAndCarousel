@@ -1,5 +1,5 @@
-import prisma from '../../lib/prisma.js'
-import { requireAuth, checkRateLimit, getClientIP } from '../../utils/auth'
+import { requireAuth } from '../../utils/auth'
+import { checkRateLimit, getClientIP } from '../../utils/auth'
 import { handleSafeError, handleMethodNotAllowed } from '../../utils/error-handling'
 
 export default defineEventHandler(async (event) => {
@@ -13,8 +13,12 @@ export default defineEventHandler(async (event) => {
     const clientIP = getClientIP(event) || 'unknown'
     checkRateLimit(`orders-${clientIP}`, 20, 60000) // 20 requests per minute
 
-    // Require authentication using centralized utility
+    // Require authentication
     const user = await requireAuth(event)
+    
+    // Dynamic Prisma import
+    const { getPrismaClient } = await import('../../../lib/prisma.js')
+    const prisma = await getPrismaClient()
 
     console.log(`Fetching orders for user: ${user.email}`)
 

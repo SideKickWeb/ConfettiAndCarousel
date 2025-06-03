@@ -59,7 +59,7 @@ export default defineEventHandler(async (event) => {
     console.log(`Profile update attempt for user: ${user.email}`)
 
     // Dynamic Prisma import
-    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const { getPrismaClient } = await import('../../../lib/prisma.js')
     const prisma = await getPrismaClient()
 
     // Get current account data

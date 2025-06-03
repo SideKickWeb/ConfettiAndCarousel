@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
     console.log(`Login attempt for email: ${email}`)
 
     // Dynamic Prisma import
-    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const { getPrismaClient } = await import('../../../lib/prisma.js')
     const prisma = await getPrismaClient()
 
     // Find user by email

@@ -1,6 +1,8 @@
-import prisma from '../../lib/prisma.js'
-
 export default defineEventHandler(async (event) => {
+  // Dynamic Prisma import
+  const { getPrismaClient } = await import('../../../lib/prisma.js')
+  const prisma = await getPrismaClient()
+
   try {
     // Since there's no location table in the schema, return a mock response
     // This can be updated later when locations are added to the schema

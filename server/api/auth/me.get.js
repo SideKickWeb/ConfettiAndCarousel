@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
     const user = await requireAuth(event)
     
     // Dynamic Prisma import
-    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const { getPrismaClient } = await import('../../../lib/prisma.js')
     const prisma = await getPrismaClient()
 
     // Get fresh user data from database

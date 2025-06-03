@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Dynamic Prisma import
-    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const { getPrismaClient } = await import('../../../lib/prisma.js')
     const prisma = await getPrismaClient()
 
     // Get current user with password

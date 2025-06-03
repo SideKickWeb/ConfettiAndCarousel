@@ -1,8 +1,4 @@
-import prisma from '../../../lib/prisma.js'
-import { getCookie } from 'h3'
-import jwt from 'jsonwebtoken'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-key'
+import { requireAuth } from '../../../utils/auth'
 
 export default defineEventHandler(async (event) => {
   // Only allow POST method
@@ -22,27 +18,14 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Get user from token
-  const token = getCookie(event, 'token')
-  if (!token) {
-    return createError({
-      statusCode: 401,
-      message: 'Unauthorized: No token provided'
-    })
-  }
-
-  let userId
   try {
-    const decoded = jwt.verify(token, JWT_SECRET)
-    userId = decoded.userId
-  } catch (error) {
-    return createError({
-      statusCode: 401,
-      message: 'Unauthorized: Invalid token'
-    })
-  }
+    // Require authentication
+    const user = await requireAuth(event)
+    
+    // Dynamic Prisma import
+    const { getPrismaClient } = await import('../../../../lib/prisma.js')
+    const prisma = await getPrismaClient()
 
-  try {
     // Find the booking
     const booking = await prisma.booking.findUnique({
       where: { id }
@@ -56,7 +39,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Check if user owns the booking
-    if (booking.userId !== userId) {
+    if (booking.userId !== user.id) {
       return createError({
         statusCode: 403,
         message: 'You can only cancel your own bookings'

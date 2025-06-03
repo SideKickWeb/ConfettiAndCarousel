@@ -1,8 +1,14 @@
-import prisma from '../../../lib/prisma.js'
-import jwt from 'jsonwebtoken'
+import { requireAuth } from '../../../utils/auth'
 
 export default defineEventHandler(async (event) => {
   try {
+    // Require authentication
+    const user = await requireAuth(event)
+    
+    // Dynamic Prisma import
+    const { getPrismaClient } = await import('../../../../lib/prisma.js')
+    const prisma = await getPrismaClient()
+
     // Get token from cookies
     const token = getCookie(event, 'token')
 

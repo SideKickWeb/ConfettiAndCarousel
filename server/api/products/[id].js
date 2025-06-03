@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Dynamic Prisma import
-    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const { getPrismaClient } = await import('../../../lib/prisma.js')
     const prisma = await getPrismaClient()
 
     // Fetch the specific product with all relations

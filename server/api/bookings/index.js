@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     // GET - Fetch bookings
     if (method === 'GET') {
       // Dynamic Prisma import
-      const { getPrismaClient } = await import('../../lib/prisma.js')
+      const { getPrismaClient } = await import('../../../lib/prisma.js')
       const prisma = await getPrismaClient()
 
       console.log('Fetching all bookings')
@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
       const body = await readBody(event)
       
       // Dynamic Prisma import
-      const { getPrismaClient } = await import('../../lib/prisma.js')
+      const { getPrismaClient } = await import('../../../lib/prisma.js')
       const prisma = await getPrismaClient()
 
       // Validate input

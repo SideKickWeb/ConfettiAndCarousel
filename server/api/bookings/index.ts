@@ -1,8 +1,11 @@
-import prisma from '../../lib/prisma.js'
 import { randomUUID } from 'crypto'
 
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
+
+  // Dynamic Prisma import
+  const { getPrismaClient } = await import('../../../lib/prisma.js')
+  const prisma = await getPrismaClient()
 
   // GET - Fetch all events (bookings)
   if (method === 'GET') {
