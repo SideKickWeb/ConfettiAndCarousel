@@ -1,190 +1,96 @@
-import prisma from '../../lib/prisma.js'
-import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
+import { requireAuth, validateInput, checkRateLimit, getClientIP } from '../../utils/auth'
+import { 
+  handleSafeError, 
+  handleMethodNotAllowed,
+  createUserFriendlyError,
+  ERROR_CATEGORIES 
+} from '../../utils/error-handling'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get token from cookies
-    const token = getCookie(event, 'token')
-
-    if (!token) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Not authenticated'
-      })
+    // Only allow DELETE method
+    if (getMethod(event) !== 'DELETE') {
+      throw handleMethodNotAllowed(getMethod(event), ['DELETE'])
     }
 
-    // Verify token
-    let decoded
-    try {
-      decoded = jwt.verify(token, useRuntimeConfig().jwtSecret)
-    } catch (err) {
-      console.error('Error verifying token:', err.message)
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Invalid or expired token'
-      })
-    }
+    // Apply rate limiting
+    const clientIP = getClientIP(event) || 'unknown'
+    checkRateLimit(`delete-account-${clientIP}`, 2, 60 * 60 * 1000) // 2 attempts per hour
 
-    const userId = decoded.id
-
-    // Get request body for confirmation
+    // Require authentication
+    const user = await requireAuth(event)
+    
     const body = await readBody(event)
     
-    // Require explicit confirmation
-    if (!body.confirmDelete || body.confirmDelete !== true) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Account deletion must be explicitly confirmed'
+    // Validate input
+    const { password, confirmDelete } = validateInput(body, {
+      password: { 
+        required: true, 
+        type: 'string',
+        minLength: 1,
+        label: 'Password'
+      },
+      confirmDelete: { 
+        required: true, 
+        type: 'string',
+        label: 'Confirmation'
+      }
+    })
+
+    // Check confirmation
+    if (confirmDelete !== 'DELETE') {
+      throw createUserFriendlyError('INVALID_CONFIRMATION', 400, ERROR_CATEGORIES.VALIDATION, {
+        message: 'Please type "DELETE" to confirm account deletion.'
       })
     }
 
-    // Optional: Require password confirmation for extra security
-    if (body.password) {
-      const account = await prisma.account.findUnique({
-        where: { id: userId }
+    // Dynamic Prisma import
+    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const prisma = await getPrismaClient()
+
+    // Get current user with password
+    const currentUser = await prisma.account.findUnique({
+      where: { id: user.id }
+    })
+
+    if (!currentUser) {
+      throw createUserFriendlyError('USER_NOT_FOUND', 404, ERROR_CATEGORIES.AUTH, {
+        message: 'User account not found.'
       })
-
-      if (!account) {
-        throw createError({
-          statusCode: 404,
-          statusMessage: 'Account not found'
-        })
-      }
-
-      // Verify password if provided
-      const bcrypt = await import('bcryptjs')
-      const passwordMatch = await bcrypt.compare(body.password, account.password)
-      
-      if (!passwordMatch) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: 'Invalid password'
-        })
-      }
     }
 
-    console.log(`Deleting account for user ID: ${userId}`)
-
-    // Use transaction to ensure all related data is deleted properly
-    await prisma.$transaction(async (prisma) => {
-      // Check if user exists as a customer and get customer ID
-      const customer = await prisma.customer.findUnique({
-        where: { email: decoded.email }
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, currentUser.password)
+    
+    if (!isPasswordValid) {
+      throw createUserFriendlyError('INVALID_PASSWORD', 401, ERROR_CATEGORIES.AUTH, {
+        message: 'Password is incorrect.'
       })
+    }
 
-      if (customer) {
-        console.log(`Found customer record: ${customer.id}`)
-
-        // Delete order-related data first (due to foreign key constraints)
-        // Delete order item options
-        await prisma.orderItemOption.deleteMany({
-          where: {
-            OrderItem: {
-              Order: {
-                customerId: customer.id
-              }
-            }
-          }
-        })
-
-        // Delete order items
-        await prisma.orderItem.deleteMany({
-          where: {
-            Order: {
-              customerId: customer.id
-            }
-          }
-        })
-
-        // Delete order status history
-        await prisma.orderStatusHistory.deleteMany({
-          where: {
-            Order: {
-              customerId: customer.id
-            }
-          }
-        })
-
-        // Delete orders
-        await prisma.order.deleteMany({
-          where: {
-            customerId: customer.id
-          }
-        })
-
-        // Delete event-related data
-        // Delete event item options
-        await prisma.eventItemOption.deleteMany({
-          where: {
-            EventItem: {
-              Event: {
-                customerId: customer.id
-              }
-            }
-          }
-        })
-
-        // Delete event items
-        await prisma.eventItem.deleteMany({
-          where: {
-            Event: {
-              customerId: customer.id
-            }
-          }
-        })
-
-        // Delete events
-        await prisma.event.deleteMany({
-          where: {
-            customerId: customer.id
-          }
-        })
-
-        // Delete customer record
-        await prisma.customer.delete({
-          where: { id: customer.id }
-        })
-
-        console.log(`Deleted customer record and all related data for: ${customer.id}`)
-      }
-
-      // Finally, delete the account
-      await prisma.account.delete({
-        where: { id: userId }
-      })
-
-      console.log(`Deleted account: ${userId}`)
+    // Delete account
+    await prisma.account.delete({
+      where: { id: user.id }
     })
 
-    // Clear the authentication cookie
-    deleteCookie(event, 'token', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
-      sameSite: 'strict',
-      path: '/'
-    })
-
-    console.log(`Account deletion completed for user: ${decoded.email}`)
+    console.log(`Account deleted successfully for user: ${user.email}`)
 
     return {
       success: true,
-      message: 'Account and all associated data have been permanently deleted'
+      message: 'Your account has been deleted successfully.'
     }
 
   } catch (error) {
-    console.error('Error deleting account:', error)
+    console.error('Delete account error:', error)
     
-    // Don't expose internal errors to the client
+    // Handle different error types with user-friendly messages
     if (error.statusCode) {
-      throw error
+      throw error // Re-throw user-friendly errors
     }
     
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Failed to delete account. Please try again or contact support.'
+    throw createUserFriendlyError('SERVER_ERROR', 500, ERROR_CATEGORIES.SERVER, {
+      message: 'We are experiencing technical difficulties. Please try again in a few minutes.'
     })
-  } finally {
-    // Disconnect prisma client
-    await prisma.$disconnect()
   }
 }) 

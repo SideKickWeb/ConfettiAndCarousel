@@ -1,10 +1,8 @@
-import prisma from '../../lib/prisma.js'
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
 import { requireAuth, validateInput, checkRateLimit, getClientIP } from '../../utils/auth'
 import { 
   handleSafeError, 
   handleMethodNotAllowed, 
-  handleAuthError,
   createUserFriendlyError,
   ERROR_CATEGORIES 
 } from '../../utils/error-handling'
@@ -18,9 +16,9 @@ export default defineEventHandler(async (event) => {
 
     // Apply rate limiting for profile updates
     const clientIP = getClientIP(event) || 'unknown'
-    checkRateLimit(`update-profile-${clientIP}`, 5, 300000) // 5 updates per 5 minutes per IP
+    checkRateLimit(`update-profile-${clientIP}`, 5, 15 * 60 * 1000) // 5 updates per 15 minutes
 
-    // Require authentication using centralized utility
+    // Require authentication
     const user = await requireAuth(event)
 
     // Get request body
@@ -60,6 +58,10 @@ export default defineEventHandler(async (event) => {
 
     console.log(`Profile update attempt for user: ${user.email}`)
 
+    // Dynamic Prisma import
+    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const prisma = await getPrismaClient()
+
     // Get current account data
     const currentAccount = await prisma.account.findUnique({
       where: { id: user.id },
@@ -73,7 +75,9 @@ export default defineEventHandler(async (event) => {
     })
 
     if (!currentAccount) {
-      throw handleAuthError('ACCOUNT_NOT_FOUND')
+      throw createUserFriendlyError('ACCOUNT_NOT_FOUND', 404, ERROR_CATEGORIES.AUTH, {
+        message: 'User account not found.'
+      })
     }
 
     // Check if email is being changed
@@ -90,7 +94,9 @@ export default defineEventHandler(async (event) => {
       // Verify current password
       const isPasswordValid = await bcrypt.compare(currentPassword, currentAccount.password)
       if (!isPasswordValid) {
-        throw handleAuthError('CURRENT_PASSWORD_INCORRECT')
+        throw createUserFriendlyError('CURRENT_PASSWORD_INCORRECT', 401, ERROR_CATEGORIES.AUTH, {
+          message: 'Current password is incorrect.'
+        })
       }
 
       // Check if new email already exists
@@ -99,54 +105,31 @@ export default defineEventHandler(async (event) => {
       })
 
       if (existingAccount && existingAccount.id !== user.id) {
-        throw handleAuthError('EMAIL_EXISTS')
+        throw createUserFriendlyError('EMAIL_EXISTS', 409, ERROR_CATEGORIES.VALIDATION, {
+          message: 'An account with this email address already exists.'
+        })
       }
     }
 
-    // Apply additional rate limiting per user
-    checkRateLimit(`update-profile-user-${user.id}`, 3, 300000) // 3 updates per 5 minutes per user
-
-    // Update account and customer records in transaction
-    const updatedAccount = await prisma.$transaction(async (prisma) => {
-      // Update account
-      const account = await prisma.account.update({
-        where: { id: user.id },
-        data: {
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          email: email.toLowerCase(),
-          updatedAt: new Date()
-        },
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          role: true,
-          accessLevel: true,
-          createdAt: true,
-          updatedAt: true
-        }
-      })
-
-      // Update corresponding customer record if it exists
-      const existingCustomer = await prisma.customer.findUnique({
-        where: { id: user.id }
-      })
-
-      if (existingCustomer) {
-        await prisma.customer.update({
-          where: { id: user.id },
-          data: {
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            email: email.toLowerCase(),
-            updatedAt: new Date()
-          }
-        })
+    // Update account
+    const updatedAccount = await prisma.account.update({
+      where: { id: user.id },
+      data: {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.toLowerCase(),
+        updatedAt: new Date()
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        accessLevel: true,
+        createdAt: true,
+        updatedAt: true
       }
-
-      return account
     })
 
     console.log(`Profile updated successfully for user: ${updatedAccount.email}`)
@@ -160,7 +143,13 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     console.error('Error updating profile:', error)
     
-    // Use centralized error handling
-    handleSafeError(error, 'SERVER_ERROR')
+    // Handle different error types with user-friendly messages
+    if (error.statusCode) {
+      throw error // Re-throw user-friendly errors
+    }
+    
+    throw createUserFriendlyError('SERVER_ERROR', 500, ERROR_CATEGORIES.SERVER, {
+      message: 'We are experiencing technical difficulties. Please try again in a few minutes.'
+    })
   }
 }) 
