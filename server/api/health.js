@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     if (process.env.DATABASE_URL) {
       try {
         // Try to import the dynamic Prisma client loader
-        const { getPrismaClient } = await import('~/lib/prisma')
+        const { getPrismaClient } = await import('../../lib/prisma')
         const prisma = await getPrismaClient()
         
         // Test connection with a simple query
