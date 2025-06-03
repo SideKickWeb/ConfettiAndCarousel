@@ -56,8 +56,29 @@ export default defineNuxtConfig({
     }
   },
   vite: {
+    plugins: [
+      {
+        name: 'prisma-client-fix',
+        resolveId(id) {
+          if (id === '.prisma/client/index-browser' || id.startsWith('.prisma/client')) {
+            return '@prisma/client'
+          }
+        }
+      }
+    ],
     optimizeDeps: {
       exclude: ['@prisma/client']
+    },
+    resolve: {
+      alias: {
+        '.prisma/client/index-browser': '@prisma/client/index-browser',
+        '.prisma/client': '@prisma/client'
+      }
+    },
+    build: {
+      commonjsOptions: {
+        include: [/@prisma\/client/, /node_modules/]
+      }
     }
   },
   compatibilityDate: '2024-11-01'
