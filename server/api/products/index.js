@@ -1,5 +1,3 @@
-import prisma from '../../lib/prisma.js'
-
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
 
@@ -20,6 +18,10 @@ export default defineEventHandler(async (event) => {
         whereClause.categoryId = category
         console.log(`API: Filtering by category ID: ${category}`)
       }
+      
+      // Dynamic Prisma import
+      const { getPrismaClient } = await import('../../lib/prisma.js')
+      const prisma = await getPrismaClient()
       
       // Fetch products with proper category filter
       const products = await prisma.product.findMany({

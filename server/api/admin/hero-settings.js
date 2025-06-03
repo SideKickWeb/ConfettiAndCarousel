@@ -1,4 +1,3 @@
-import prisma from '../../lib/prisma.js'
 import { requireAdmin, validateInput, checkRateLimit, getClientIP } from '../../utils/auth';
 import { 
   handleSafeError, 
@@ -18,6 +17,10 @@ export default defineEventHandler(async (event) => {
     // GET - Fetch current hero settings
     if (method === 'GET') {
       console.log('Fetching hero settings');
+      
+      // Dynamic Prisma import
+      const { getPrismaClient } = await import('../../lib/prisma.js')
+      const prisma = await getPrismaClient()
       
       const settings = await prisma.heroSetting.findFirst({
         where: { active: true },
@@ -94,6 +97,10 @@ export default defineEventHandler(async (event) => {
           label: 'Active status'
         }
       });
+
+      // Dynamic Prisma import
+      const { getPrismaClient } = await import('../../lib/prisma.js')
+      const prisma = await getPrismaClient()
 
       // Check for existing settings
       const existingSettings = await prisma.heroSetting.findFirst();

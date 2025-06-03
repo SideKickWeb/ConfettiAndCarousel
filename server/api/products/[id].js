@@ -1,5 +1,3 @@
-import prisma from '../../lib/prisma.js'
-
 export default defineEventHandler(async (event) => {
   try {
     const productId = event.context.params.id;
@@ -11,6 +9,10 @@ export default defineEventHandler(async (event) => {
         message: 'Product ID is required'
       };
     }
+
+    // Dynamic Prisma import
+    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const prisma = await getPrismaClient()
 
     // Fetch the specific product with all relations
     const product = await prisma.product.findUnique({

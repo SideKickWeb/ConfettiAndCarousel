@@ -1,165 +1,121 @@
-import prisma from '../../lib/prisma.js'
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { v4 as uuidv4 } from 'uuid'
-import { validateInput, checkRateLimit, getClientIP } from '../../utils/auth'
 import { 
-  handleSafeError, 
-  handleMethodNotAllowed, 
-  handleAuthError,
+  handleAuthError, 
+  handleValidationError, 
+  handleRateLimitError,
   createUserFriendlyError,
   ERROR_CATEGORIES 
 } from '../../utils/error-handling'
+import { validateInput, checkRateLimit, getClientIP } from '../../utils/auth'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Only allow POST method
-    if (getMethod(event) !== 'POST') {
-      throw handleMethodNotAllowed(getMethod(event), ['POST'])
-    }
-
     // Apply rate limiting for registration attempts
     const clientIP = getClientIP(event) || 'unknown'
-    checkRateLimit(`register-${clientIP}`, 3, 300000, 'REGISTRATION') // 3 registrations per 5 minutes per IP
+    checkRateLimit(`register-${clientIP}`, 3, 60 * 60 * 1000, 'REGISTRATION') // 3 attempts per hour
 
-    // Get request body
     const body = await readBody(event)
-
-    // Validate and sanitize input with user-friendly messages
-    const validatedData = validateInput(body, {
-      firstName: { 
-        required: true, 
-        type: 'string', 
-        minLength: 1, 
-        maxLength: 50,
-        label: 'First name'
-      },
-      lastName: { 
-        required: true, 
-        type: 'string', 
-        minLength: 1, 
-        maxLength: 50,
-        label: 'Last name'
-      },
+    
+    // Validate input with user-friendly messages
+    const { email, password, firstName, lastName } = validateInput(body, {
       email: { 
         required: true, 
-        type: 'email', 
-        maxLength: 255,
+        type: 'email',
         label: 'Email address'
       },
       password: { 
         required: true, 
         type: 'string', 
-        minLength: 6, 
-        maxLength: 255,
+        minLength: 8,
+        patternMessage: 'Password must be at least 8 characters long',
         label: 'Password'
       },
-      confirmPassword: { 
-        required: true, 
+      firstName: {
+        required: true,
+        type: 'string',
+        minLength: 1,
+        maxLength: 50,
+        label: 'First name'
+      },
+      lastName: {
+        required: true,
         type: 'string', 
-        minLength: 6,
-        label: 'Password confirmation'
+        minLength: 1,
+        maxLength: 50,
+        label: 'Last name'
       }
     })
 
-    const { firstName, lastName, email, password, confirmPassword } = validatedData
-
-    // Check if passwords match
-    if (password !== confirmPassword) {
-      throw handleAuthError('PASSWORD_MISMATCH')
-    }
-
     console.log(`Registration attempt for email: ${email}`)
 
-    // Check if account already exists
-    const existingAccount = await prisma.account.findUnique({
+    // Dynamic Prisma import
+    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const prisma = await getPrismaClient()
+
+    // Check if user already exists
+    const existingUser = await prisma.account.findUnique({
       where: { email: email.toLowerCase() }
     })
 
-    if (existingAccount) {
-      console.log(`Registration failed: Email already exists: ${email}`)
-      throw handleAuthError('EMAIL_EXISTS')
+    if (existingUser) {
+      throw createUserFriendlyError('EMAIL_EXISTS', 409, ERROR_CATEGORIES.VALIDATION, {
+        message: 'An account with this email address already exists. Please try logging in instead.'
+      })
     }
 
-    // Hash password with secure salt rounds
-    const saltRounds = 12
-    const hashedPassword = await bcrypt.hash(password, saltRounds)
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Create account in transaction to ensure data consistency
-    const account = await prisma.$transaction(async (prisma) => {
-      // Create the account
-      const newAccount = await prisma.account.create({
-        data: {
-          id: uuidv4(),
-          email: email.toLowerCase(),
-          password: hashedPassword,
-          firstName,
-          lastName,
-          role: 'customer', // Default role
-          accessLevel: 'standard',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      })
-
-      // Also create a Customer record for orders/bookings
-      await prisma.customer.create({
-        data: {
-          id: newAccount.id, // Use same ID for consistency
-          email: newAccount.email,
-          firstName: newAccount.firstName,
-          lastName: newAccount.lastName,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      })
-
-      return newAccount
+    // Create new user
+    const newUser = await prisma.account.create({
+      data: {
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        role: 'user',
+        accessLevel: 1
+      }
     })
 
-    console.log(`Account created successfully for user: ${account.email}`)
-
-    // Generate JWT token for immediate login
+    // Generate JWT token
     const token = jwt.sign(
       { 
-        id: account.id, 
-        email: account.email,
-        role: account.role,
-        firstName: account.firstName,
-        lastName: account.lastName
+        userId: newUser.id,
+        email: newUser.email,
+        role: newUser.role,
+        accessLevel: newUser.accessLevel
       },
-      useRuntimeConfig().jwtSecret,
+      process.env.JWT_SECRET || 'development-secret-key',
       { expiresIn: '7d' }
     )
 
-    // Set secure HTTP-only cookie
-    setCookie(event, 'token', token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7 // 7 days in seconds
-    })
+    console.log(`Registration successful for user: ${newUser.email}`)
 
-    // Return account data (excluding password)
     return {
       success: true,
-      data: {
-        id: account.id,
-        email: account.email,
-        firstName: account.firstName,
-        lastName: account.lastName,
-        role: account.role,
-        accessLevel: account.accessLevel,
-        createdAt: account.createdAt
-      },
-      message: 'Account created successfully! Welcome to Confetti and Carousel.'
+      message: 'Account created successfully! Welcome!',
+      token,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        role: newUser.role,
+        accessLevel: newUser.accessLevel
+      }
     }
   } catch (error) {
     console.error('Registration error:', error)
     
-    // Use centralized error handling
-    handleSafeError(error, 'SERVER_ERROR')
-  } finally {
-    await prisma.$disconnect()
+    // Handle different error types with user-friendly messages
+    if (error.statusCode) {
+      throw error // Re-throw user-friendly errors
+    }
+    
+    throw createUserFriendlyError('SERVER_ERROR', 500, ERROR_CATEGORIES.SERVER, {
+      message: 'We are experiencing technical difficulties. Please try again in a few minutes.'
+    })
   }
 }) 

@@ -1,31 +1,24 @@
-import prisma from '../../lib/prisma.js'
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { validateInput, checkRateLimit, getClientIP } from '../../utils/auth'
 import { 
-  handleSafeError, 
-  handleMethodNotAllowed, 
-  handleAuthError,
+  handleAuthError, 
+  handleValidationError, 
+  handleRateLimitError,
   createUserFriendlyError,
   ERROR_CATEGORIES 
 } from '../../utils/error-handling'
+import { validateInput, checkRateLimit, getClientIP } from '../../utils/auth'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Only allow POST method
-    if (getMethod(event) !== 'POST') {
-      throw handleMethodNotAllowed(getMethod(event), ['POST'])
-    }
-
-    // Apply strict rate limiting for login attempts
+    // Apply rate limiting for login attempts
     const clientIP = getClientIP(event) || 'unknown'
-    checkRateLimit(`login-${clientIP}`, 5, 300000, 'LOGIN') // 5 attempts per 5 minutes per IP
+    checkRateLimit(`login-${clientIP}`, 5, 15 * 60 * 1000, 'LOGIN') // 5 attempts per 15 minutes
 
-    // Get request body
     const body = await readBody(event)
-
+    
     // Validate input with user-friendly messages
-    const validatedData = validateInput(body, {
+    const { email, password } = validateInput(body, {
       email: { 
         required: true, 
         type: 'email',
@@ -39,83 +32,69 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    const { email, password } = validatedData
-
     console.log(`Login attempt for email: ${email}`)
 
-    // Find user account
-    const account = await prisma.account.findUnique({
+    // Dynamic Prisma import
+    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const prisma = await getPrismaClient()
+
+    // Find user by email
+    const user = await prisma.account.findUnique({
       where: { email: email.toLowerCase() }
     })
 
-    if (!account) {
-      // Apply rate limiting per email address for invalid login attempts
-      checkRateLimit(`login-email-${email}`, 3, 300000, 'LOGIN') // 3 attempts per 5 minutes per email
-      console.log(`Login failed: No account found for email: ${email}`)
-      throw handleAuthError('INVALID_CREDENTIALS')
+    if (!user) {
+      throw createUserFriendlyError('INVALID_CREDENTIALS', 401, ERROR_CATEGORIES.AUTH, {
+        message: 'Invalid email or password. Please check your credentials and try again.'
+      })
     }
 
-    // Apply rate limiting per email address
-    checkRateLimit(`login-email-${email}`, 3, 300000, 'LOGIN') // 3 attempts per 5 minutes per email
-
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, account.password)
-    if (!isPasswordValid) {
-      console.log(`Login failed: Invalid password for email: ${email}`)
-      throw handleAuthError('INVALID_CREDENTIALS')
+    // Check password
+    const isValidPassword = await bcrypt.compare(password, user.password)
+    
+    if (!isValidPassword) {
+      throw createUserFriendlyError('INVALID_CREDENTIALS', 401, ERROR_CATEGORIES.AUTH, {
+        message: 'Invalid email or password. Please check your credentials and try again.'
+      })
     }
-
-    // Check if account is active (if you have an active field)
-    // if (!account.active) {
-    //   throw createUserFriendlyError('ACCOUNT_SUSPENDED', 403, ERROR_CATEGORIES.AUTH, {
-    //     message: 'Your account has been suspended. Please contact support.'
-    //   })
-    // }
 
     // Generate JWT token
     const token = jwt.sign(
       { 
-        id: account.id, 
-        email: account.email,
-        role: account.role,
-        firstName: account.firstName,
-        lastName: account.lastName
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        accessLevel: user.accessLevel
       },
-      useRuntimeConfig().jwtSecret,
-      { expiresIn: '7d' } // 7 days expiration
+      process.env.JWT_SECRET || 'development-secret-key',
+      { expiresIn: '7d' }
     )
 
-    // Set secure HTTP-only cookie
-    setCookie(event, 'token', token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7 // 7 days in seconds
-    })
+    console.log(`Login successful for user: ${user.email}`)
 
-    console.log(`Login successful for user: ${account.email}`)
-
-    // Return account data (excluding password)
     return {
       success: true,
-      data: {
-        id: account.id,
-        email: account.email,
-        firstName: account.firstName,
-        lastName: account.lastName,
-        role: account.role,
-        accessLevel: account.accessLevel,
-        isAdmin: account.role === 'admin',
-        createdAt: account.createdAt
-      },
-      message: 'Login successful'
+      message: 'Login successful! Welcome back.',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        accessLevel: user.accessLevel
+      }
     }
   } catch (error) {
     console.error('Login error:', error)
     
-    // Use centralized error handling
-    handleSafeError(error, 'SERVER_ERROR')
-  } finally {
-    await prisma.$disconnect()
+    // Handle different error types with user-friendly messages
+    if (error.statusCode) {
+      throw error // Re-throw user-friendly errors
+    }
+    
+    throw createUserFriendlyError('SERVER_ERROR', 500, ERROR_CATEGORIES.SERVER, {
+      message: 'We are experiencing technical difficulties. Please try again in a few minutes.'
+    })
   }
 }) 
