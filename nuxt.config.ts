@@ -21,19 +21,6 @@ export default defineNuxtConfig({
     },
     externals: {
       inline: ['@prisma/client']
-    },
-    rollupConfig: {
-      external: ['.prisma/client', '.prisma'],
-      plugins: [
-        {
-          name: 'prisma-nitro-fix',
-          resolveId(id) {
-            if (id === '.prisma' || id.startsWith('.prisma/')) {
-              return { id: '@prisma/client', external: true }
-            }
-          }
-        }
-      ]
     }
   },
   // Server-side rendering options
@@ -69,22 +56,9 @@ export default defineNuxtConfig({
     }
   },
   vite: {
-    plugins: [
-      {
-        name: 'prisma-client-fix',
-        resolveId(id) {
-          if (id === '.prisma/client/index-browser' || id === '.prisma/client/default') {
-            return { id: '@prisma/client', external: true }
-          }
-        }
-      }
-    ],
     optimizeDeps: {
       exclude: ['@prisma/client']
     }
-  },
-  build: {
-    transpile: ['@prisma/client']
   },
   compatibilityDate: '2024-11-01'
 })

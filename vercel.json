@@ -1,9 +1,10 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm install && npx prisma generate",
+  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm ci",
   "env": {
     "PRISMA_CLI_BINARY_TARGETS": "rhel-openssl-3.0.x,native",
-    "PRISMA_QUERY_ENGINE_LIBRARY": "rhel-openssl-3.0.x",
+    "PRISMA_QUERY_ENGINE_BINARY": "rhel-openssl-3.0.x",
+    "PRISMA_QUERY_ENGINE_LIBRARY": "./node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node",
     "NODE_ENV": "production",
     "SKIP_ENV_VALIDATION": "1"
   },

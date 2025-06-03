@@ -11,24 +11,33 @@ export default defineEventHandler(async (event) => {
       runtime: 'Node.js ' + process.version
     }
 
-    // Test database connection if available
+    // Test Prisma client availability and database connection
     if (process.env.DATABASE_URL) {
       try {
-        const { PrismaClient } = await import('@prisma/client')
-        const prisma = new PrismaClient()
+        // Try to import the centralized Prisma client
+        const { default: prisma } = await import('~/lib/prisma')
         
         // Test connection with a simple query
         await prisma.$queryRaw`SELECT 1 as test`
         health.database = 'connected'
+        health.prismaClient = 'available'
         
-        await prisma.$disconnect()
       } catch (dbError) {
-        console.error('Database connection error:', dbError)
+        console.error('Database/Prisma error:', dbError)
         health.database = 'error'
+        health.prismaClient = 'error'
         health.databaseError = dbError.message
+        
+        // Additional debug info for Prisma issues
+        if (dbError.message.includes('Cannot find package')) {
+          health.prismaIssue = 'module_not_found'
+        } else if (dbError.message.includes('ECONNREFUSED')) {
+          health.prismaIssue = 'connection_refused'
+        }
       }
     } else {
       health.database = 'no_url'
+      health.prismaClient = 'no_database_url'
     }
 
     return health
