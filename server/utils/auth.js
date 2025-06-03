@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken'
-import prisma from '../lib/prisma.js'
 import { 
   handleAuthError, 
   handlePermissionError, 
@@ -37,14 +36,12 @@ export const getClientIP = (event) => {
  * @param {string} token - JWT token
  * @returns {Object|null} - Decoded user data or null if invalid
  */
-export const verifyToken = (token) => {
-  if (!token) return null
-  
+export async function verifyToken(token) {
   try {
-    const decoded = jwt.verify(token, useRuntimeConfig().jwtSecret)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'development-secret-key')
     return decoded
   } catch (error) {
-    console.error('Token verification failed:', error.message)
+    console.error('Token verification failed:', error)
     return null
   }
 }
@@ -54,39 +51,23 @@ export const verifyToken = (token) => {
  * @param {Object} event - Nuxt event object
  * @returns {Object|null} - User data or null if not authenticated
  */
-export const getAuthenticatedUser = async (event) => {
+export async function getUserFromToken(token) {
   try {
-    // Get token from cookie
-    const token = getCookie(event, 'token')
+    const decoded = await verifyToken(token)
+    if (!decoded) return null
     
-    if (!token) {
-      return null
-    }
-
-    // Verify token
-    const decoded = verifyToken(token)
-    if (!decoded || !decoded.id) {
-      return null
-    }
-
-    // Get fresh user data from database to ensure account still exists and is valid
+    // Dynamic Prisma import
+    const { getPrismaClient } = await import('../../lib/prisma.js')
+    const prisma = await getPrismaClient()
+    
     const user = await prisma.account.findUnique({
-      where: { id: decoded.id },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        accessLevel: true,
-        createdAt: true,
-        updatedAt: true
-      }
+      where: { id: decoded.userId },
+      select: { id: true, email: true, firstName: true, lastName: true, role: true, accessLevel: true }
     })
-
+    
     return user
   } catch (error) {
-    console.error('Error getting authenticated user:', error)
+    console.error('Error getting user from token:', error)
     return null
   }
 }
@@ -98,7 +79,7 @@ export const getAuthenticatedUser = async (event) => {
  * @throws {Error} - If not authenticated
  */
 export const requireAuth = async (event) => {
-  const user = await getAuthenticatedUser(event)
+  const user = await getUserFromToken(getCookie(event, 'token'))
   
   if (!user) {
     throw handleAuthError('REQUIRED')
