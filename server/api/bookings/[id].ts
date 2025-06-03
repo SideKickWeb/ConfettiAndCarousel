@@ -3,93 +3,91 @@ import prisma from '../../lib/prisma.js'
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
   const params = event.context.params || {}
-  const id = parseInt(params.id || '')
+  const id = params.id
 
-  if (isNaN(id)) {
+  if (!id) {
     return {
       statusCode: 400,
-      message: 'Invalid booking ID'
+      message: 'Invalid event ID'
     }
   }
 
-  // GET - Fetch a specific booking
+  // GET - Fetch a specific event
   if (method === 'GET') {
     try {
-      const booking = await prisma.booking.findUnique({
+      const eventData = await prisma.event.findUnique({
         where: { id },
         include: {
-          product: true,
-          location: true
+          Customer: true
         }
       })
 
-      if (!booking) {
+      if (!eventData) {
         return {
           statusCode: 404,
-          message: 'Booking not found'
+          message: 'Event not found'
         }
       }
 
-      return booking
+      return eventData
     } catch (error) {
-      console.error('Error fetching booking:', error)
+      console.error('Error fetching event:', error)
       return {
         statusCode: 500,
-        message: 'Failed to fetch booking'
+        message: 'Failed to fetch event'
       }
     }
   }
 
-  // PUT - Update a booking
+  // PUT - Update an event
   if (method === 'PUT') {
     try {
       const body = await readBody(event)
       
-      const booking = await prisma.booking.update({
+      const updatedEvent = await prisma.event.update({
         where: { id },
         data: {
-          productId: body.productId,
-          locationId: body.locationId,
-          startTime: body.startTime ? new Date(body.startTime) : undefined,
-          endTime: body.endTime ? new Date(body.endTime) : undefined,
-          customerName: body.customerName,
-          customerEmail: body.customerEmail,
-          customerPhone: body.customerPhone,
+          title: body.title,
+          description: body.description,
+          location: body.location,
+          startDate: body.startDate ? new Date(body.startDate) : undefined,
+          endDate: body.endDate ? new Date(body.endDate) : undefined,
+          startTime: body.startTime,
           status: body.status,
-          notes: body.notes
+          customerNotes: body.notes,
+          updatedAt: new Date()
         },
         include: {
-          product: true,
-          location: true
+          Customer: true
         }
       })
       
-      return booking
+      return updatedEvent
     } catch (error) {
-      console.error('Error updating booking:', error)
+      console.error('Error updating event:', error)
       return {
         statusCode: 500,
-        message: 'Failed to update booking'
+        message: 'Failed to update event'
       }
     }
   }
 
-  // DELETE - Delete a booking
+  // DELETE - Delete an event
   if (method === 'DELETE') {
     try {
-      await prisma.booking.delete({
+      await prisma.event.delete({
         where: { id }
       })
       
       return {
         statusCode: 200,
-        message: 'Booking deleted successfully'
+        message: 'Event deleted successfully'
       }
     } catch (error) {
-      console.error('Error deleting booking:', error)
+      console.error('Error deleting event:', error)
       return {
         statusCode: 500,
-        message: 'Failed to delete booking'
+        message: 'Failed to delete event'
       }
     }
   }

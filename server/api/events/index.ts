@@ -36,6 +36,7 @@ export default defineEventHandler(async (eventHandler) => {
           location: body.venue || body.venueAddress || body.location,
           startDate: new Date(body.eventDate || body.startDate || body.startTime),
           endDate: new Date(body.endTime || body.endDate || body.eventDate),
+          startTime: body.startTime || '',
           status: body.status || 'requested',
           staffNotes: body.notes || body.staffNotes,
           updatedAt: new Date()

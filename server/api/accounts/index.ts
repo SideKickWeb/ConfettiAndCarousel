@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma.js'
+import { randomUUID } from 'crypto'
 
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
@@ -10,7 +11,11 @@ export default defineEventHandler(async (event) => {
         select: {
           id: true,
           email: true,
-          type: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          accessLevel: true,
+          active: true,
           createdAt: true,
           updatedAt: true
         }
@@ -44,9 +49,14 @@ export default defineEventHandler(async (event) => {
       
       const account = await prisma.account.create({
         data: {
+          id: body.id || randomUUID(),
           email: body.email,
+          firstName: body.firstName || '',
+          lastName: body.lastName || '',
           password: body.password, // In a real app, this should be hashed
-          type: body.type || 'Client'
+          role: body.role || 'user',
+          accessLevel: body.accessLevel || 'basic',
+          updatedAt: new Date()
         }
       })
       

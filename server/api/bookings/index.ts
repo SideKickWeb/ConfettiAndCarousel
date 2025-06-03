@@ -1,55 +1,56 @@
 import prisma from '../../lib/prisma.js'
+import { randomUUID } from 'crypto'
 
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
 
-  // GET - Fetch all bookings
+  // GET - Fetch all events (bookings)
   if (method === 'GET') {
     try {
-      const bookings = await prisma.booking.findMany({
+      const events = await prisma.event.findMany({
         include: {
-          product: true,
-          location: true
+          Customer: true
         }
       })
-      return bookings
+      return events
     } catch (error) {
-      console.error('Error fetching bookings:', error)
+      console.error('Error fetching events:', error)
       return {
         statusCode: 500,
-        message: 'Failed to fetch bookings'
+        message: 'Failed to fetch events'
       }
     }
   }
 
-  // POST - Create a new booking
+  // POST - Create a new event (booking)
   if (method === 'POST') {
     try {
       const body = await readBody(event)
       
-      const booking = await prisma.booking.create({
+      const newEvent = await prisma.event.create({
         data: {
-          productId: body.productId,
-          locationId: body.locationId,
-          startTime: new Date(body.startTime),
-          endTime: new Date(body.endTime),
-          customerName: body.customerName,
-          customerEmail: body.customerEmail,
-          customerPhone: body.customerPhone,
-          notes: body.notes
+          id: body.id || randomUUID(),
+          title: body.title || 'New Event',
+          description: body.description,
+          location: body.location || '',
+          startDate: new Date(body.startDate),
+          endDate: body.endDate ? new Date(body.endDate) : null,
+          startTime: body.startTime || '',
+          customerId: body.customerId,
+          customerNotes: body.notes,
+          updatedAt: new Date()
         },
         include: {
-          product: true,
-          location: true
+          Customer: true
         }
       })
       
-      return booking
+      return newEvent
     } catch (error) {
-      console.error('Error creating booking:', error)
+      console.error('Error creating event:', error)
       return {
         statusCode: 500,
-        message: 'Failed to create booking'
+        message: 'Failed to create event'
       }
     }
   }

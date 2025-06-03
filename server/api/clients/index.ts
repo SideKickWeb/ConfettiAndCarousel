@@ -1,52 +1,50 @@
 import prisma from '../../lib/prisma.js'
+import { randomUUID } from 'crypto'
 
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
 
-  // GET - Fetch all clients
+  // GET - Fetch all customers
   if (method === 'GET') {
     try {
-      const clients = await prisma.client.findMany({
+      const customers = await prisma.customer.findMany({
         include: {
-          events: true
+          Event: true,
+          Order: true
         }
       })
-      return clients
+      return customers
     } catch (error) {
-      console.error('Error fetching clients:', error)
+      console.error('Error fetching customers:', error)
       return {
         statusCode: 500,
-        message: 'Failed to fetch clients'
+        message: 'Failed to fetch customers'
       }
     }
   }
 
-  // POST - Create a new client
+  // POST - Create a new customer
   if (method === 'POST') {
     try {
       const body = await readBody(event)
       
-      const client = await prisma.client.create({
+      const customer = await prisma.customer.create({
         data: {
+          id: body.id || randomUUID(),
           firstName: body.firstName,
           lastName: body.lastName,
           email: body.email,
           phone: body.phone,
-          address: body.address,
-          Account: body.accountId ? {
-            connect: {
-              id: body.accountId
-            }
-          } : undefined
+          updatedAt: new Date()
         }
       })
       
-      return client
+      return customer
     } catch (error) {
-      console.error('Error creating client:', error)
+      console.error('Error creating customer:', error)
       return {
         statusCode: 500,
-        message: 'Failed to create client'
+        message: 'Failed to create customer'
       }
     }
   }
