@@ -18,22 +18,6 @@ export default defineNuxtConfig({
     preset: 'vercel',
     experimental: {
       wasm: true
-    },
-    externals: {
-      inline: ['@prisma/client']
-    },
-    rollupConfig: {
-      plugins: [
-        {
-          name: 'prisma-nitro-resolver',
-          resolveId(id) {
-            // Handle .prisma imports and redirect to @prisma/client
-            if (id === '.prisma' || id === '.prisma/client' || id.startsWith('.prisma/')) {
-              return '@prisma/client'
-            }
-          }
-        }
-      ]
     }
   },
   // Server-side rendering options
@@ -69,29 +53,8 @@ export default defineNuxtConfig({
     }
   },
   vite: {
-    plugins: [
-      {
-        name: 'prisma-client-fix',
-        resolveId(id) {
-          if (id === '.prisma/client/index-browser' || id.startsWith('.prisma/client')) {
-            return '@prisma/client'
-          }
-        }
-      }
-    ],
     optimizeDeps: {
       exclude: ['@prisma/client']
-    },
-    resolve: {
-      alias: {
-        '.prisma/client/index-browser': '@prisma/client/index-browser',
-        '.prisma/client': '@prisma/client'
-      }
-    },
-    build: {
-      commonjsOptions: {
-        include: [/@prisma\/client/, /node_modules/]
-      }
     }
   },
   compatibilityDate: '2024-11-01'

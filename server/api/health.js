@@ -14,8 +14,9 @@ export default defineEventHandler(async (event) => {
     // Test Prisma client availability and database connection
     if (process.env.DATABASE_URL) {
       try {
-        // Try to import the centralized Prisma client
-        const { default: prisma } = await import('~/lib/prisma')
+        // Try to import the dynamic Prisma client loader
+        const { getPrismaClient } = await import('~/lib/prisma')
+        const prisma = await getPrismaClient()
         
         // Test connection with a simple query
         await prisma.$queryRaw`SELECT 1 as test`
@@ -33,6 +34,8 @@ export default defineEventHandler(async (event) => {
           health.prismaIssue = 'module_not_found'
         } else if (dbError.message.includes('ECONNREFUSED')) {
           health.prismaIssue = 'connection_refused'
+        } else if (dbError.message.includes('Prisma client not available')) {
+          health.prismaIssue = 'client_unavailable'
         }
       }
     } else {
