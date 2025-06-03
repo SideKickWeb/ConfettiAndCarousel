@@ -1,56 +1,59 @@
-import prisma from '../../lib/prisma.js'
-
 export default defineEventHandler(async (event) => {
-  try {
-    console.log('API: Fetching product categories')
+  const method = getMethod(event)
 
-    // Get categories from the ProductCategory model
-    const categories = await prisma.productCategory.findMany({
-      where: {
-        active: true
-      },
-      select: {
-        id: true,
-        name: true,
-        description: true
-      },
-      orderBy: {
-        name: 'asc'
+  // GET - Fetch all categories
+  if (method === 'GET') {
+    try {
+      console.log('API: Fetching product categories')
+      
+      // Dynamic Prisma import
+      const { getPrismaClient } = await import('../../lib/prisma.js')
+      const prisma = await getPrismaClient()
+      
+      // Fetch all categories
+      const categories = await prisma.productCategory.findMany({
+        where: {
+          active: true
+        },
+        orderBy: {
+          name: 'asc'
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          active: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      })
+      
+      console.log(`API: Successfully fetched ${categories.length} categories from database`)
+      
+      // Set response headers
+      setResponseHeaders(event, {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'max-age=300' // Cache for 5 minutes
+      })
+      
+      return {
+        success: true,
+        data: categories,
+        count: categories.length
       }
-    })
-
-    // Format categories for the frontend
-    const formattedCategories = categories.map(category => ({
-      value: category.id,
-      label: category.name,
-      description: category.description
-    }))
-    
-    console.log(`API: Successfully fetched ${formattedCategories.length} categories`)
-
-    // Set response headers
-    setResponseHeaders(event, {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache, no-store, must-revalidate'
-    })
-
-    return {
-      success: true,
-      data: formattedCategories,
-      count: formattedCategories.length
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      
+      return {
+        success: false,
+        message: 'Failed to fetch categories',
+        error: error.message
+      }
     }
-  } catch (error) {
-    console.error('API Error fetching product categories:', error)
-    
-    // Set response headers
-    setResponseHeaders(event, {
-      'Content-Type': 'application/json'
-    })
+  }
 
-    return {
-      success: false,
-      message: 'Failed to fetch product categories',
-      error: error.message
-    }
+  return {
+    success: false,
+    message: 'Method not allowed'
   }
 }) 
