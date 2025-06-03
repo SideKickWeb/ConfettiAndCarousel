@@ -19,18 +19,15 @@ export default defineNuxtConfig({
     experimental: {
       wasm: true
     },
-    externals: {
-      inline: ['@prisma/client']
-    },
     rollupConfig: {
-      external: ['.prisma/client', '.prisma'],
+      external: ['@prisma/client'],
       plugins: [
         {
           name: 'prisma-nitro-resolver',
           resolveId(id) {
-            // Handle .prisma imports
+            // Handle .prisma imports and redirect to external @prisma/client
             if (id === '.prisma' || id === '.prisma/client' || id.startsWith('.prisma/')) {
-              return { id: '@prisma/client', external: false }
+              return { id: '@prisma/client', external: true }
             }
           }
         }
