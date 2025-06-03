@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
       console.log('Fetching hero settings');
       
       // Dynamic Prisma import
-      const { getPrismaClient } = await import('../lib/prisma.js')
+      const { getPrismaClient } = await import('../../lib/prisma.js')
       const prisma = await getPrismaClient()
       
       const settings = await prisma.heroSetting.findFirst({
