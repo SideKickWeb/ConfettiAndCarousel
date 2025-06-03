@@ -19,17 +19,21 @@ export default defineNuxtConfig({
     experimental: {
       wasm: true
     },
-    esbuild: {
-      options: {
-        target: 'es2020'
-      }
-    },
-    // Comprehensive externals for Prisma
     externals: {
       inline: ['@prisma/client']
     },
     rollupConfig: {
-      external: ['@prisma/client', '.prisma/client', '.prisma', 'prisma']
+      external: ['.prisma/client', '.prisma'],
+      plugins: [
+        {
+          name: 'prisma-nitro-fix',
+          resolveId(id) {
+            if (id === '.prisma' || id.startsWith('.prisma/')) {
+              return { id: '@prisma/client', external: true }
+            }
+          }
+        }
+      ]
     }
   },
   // Server-side rendering options
@@ -65,30 +69,23 @@ export default defineNuxtConfig({
     }
   },
   vite: {
-    build: {
-      target: 'es2020'
-    },
-    define: {
-      global: 'globalThis'
-    },
-    resolve: {
-      alias: {
-        '.prisma/client/index-browser': '.prisma/client/index.js'
-      }
-    },
-    optimizeDeps: {
-      exclude: ['@prisma/client', '.prisma/client']
-    },
     plugins: [
       {
-        name: 'prisma-client-externalize',
+        name: 'prisma-client-fix',
         resolveId(id) {
-          if (id === '@prisma/client' || id.includes('.prisma/client')) {
-            return { id, external: true }
+          if (id === '.prisma/client/index-browser' || id === '.prisma/client/default') {
+            return { id: '@prisma/client', external: true }
           }
         }
       }
-    ]
+    ],
+    optimizeDeps: {
+      exclude: ['@prisma/client']
+    }
+  },
+  build: {
+    transpile: ['@prisma/client']
   },
   compatibilityDate: '2024-11-01'
 })
+

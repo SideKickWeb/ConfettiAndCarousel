@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../lib/prisma.js'
 import { defineEventHandler } from 'h3'
-
-const prisma = new PrismaClient()
 
 // Instagram API configuration
 const INSTAGRAM_ACCESS_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN
