@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../../../lib/prisma.js'
 import { getCookie } from 'h3'
 import jwt from 'jsonwebtoken'
 
-const prisma = new PrismaClient()
 const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-key'
 
 export default defineEventHandler(async (event) => {

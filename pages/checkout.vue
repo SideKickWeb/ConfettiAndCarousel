@@ -30,8 +30,8 @@
                 <div class="item-details">
                   <div class="item-name-row">
                     <span class="item-name">{{ item.product.name }}</span>
-                    <span class="item-quantity">x{{ item.quantity }}</span>
-                  </div>
+                  <span class="item-quantity">x{{ item.quantity }}</span>
+                </div>
                   <div v-if="item.customOptions && item.customOptions.length > 0" class="item-options">
                     <div v-for="option in item.customOptions" :key="option.optionId" class="option-detail">
                       <span class="option-name">{{ option.optionName }}:</span>
@@ -61,15 +61,15 @@
           <div class="checkout-section">
             <h2>Your Information</h2>
             <div class="form-grid">
-              <div class="form-group">
+            <div class="form-group">
                 <label for="firstName">First Name</label>
-                <input
-                  type="text"
+              <input
+                type="text"
                   id="firstName"
                   v-model="customerInfo.firstName"
-                  required
+                required
                   placeholder="Your first name"
-                />
+              />
               </div>
               
               <div class="form-group">
@@ -104,9 +104,9 @@
                   v-model="customerInfo.phone"
                   placeholder="Your phone number (optional)"
                 />
-              </div>
             </div>
-            
+          </div>
+
             <div class="form-group">
               <label for="notes">Additional Notes (Optional)</label>
               <textarea
@@ -116,8 +116,8 @@
                 placeholder="Any special requests or notes about your order..."
               ></textarea>
             </div>
-          </div>
-
+            </div>
+            
           <!-- Collection Information -->
           <div class="checkout-section">
             <h2>Collection Information</h2>
@@ -126,8 +126,8 @@
               <p><strong>Collection Process:</strong> After your order is reviewed and confirmed, we'll contact you to arrange a convenient collection time.</p>
               <p><strong>Order Review:</strong> All orders are personally reviewed to ensure we can meet your requirements and provide the best service.</p>
             </div>
-          </div>
-
+              </div>
+              
           <!-- Payment Information -->
           <div class="checkout-section">
             <h2>Order Process</h2>
@@ -151,9 +151,9 @@
                 <div class="step-content">
                   <h4>Confirmation & Payment</h4>
                   <p>Finalize details and arrange payment & collection</p>
-                </div>
               </div>
             </div>
+          </div>
             
             <!-- Comprehensive disclaimer -->
             <div class="disclaimer-box">
@@ -201,9 +201,9 @@
           <p>Order reference: <strong>{{ orderReference }}</strong></p>
           <p>A confirmation email will be sent to <strong>{{ customerInfo.email }}</strong> once your order has been reviewed.</p>
           <div class="confirmation-actions">
-            <NuxtLink to="/products" class="primary-button">
-              Continue Shopping
-            </NuxtLink>
+          <NuxtLink to="/products" class="primary-button">
+            Continue Shopping
+          </NuxtLink>
             <NuxtLink to="/" class="secondary-button">
               Return Home
             </NuxtLink>
@@ -286,10 +286,10 @@ const submitOrder = async () => {
     orderError.value = 'Your basket is empty.'
     return
   }
-
+  
   isProcessing.value = true
   orderError.value = null
-
+  
   try {
     // Prepare order data
     const orderData = {
@@ -303,9 +303,9 @@ const submitOrder = async () => {
       notes: customerInfo.value.notes,
       totalAmount: cartStore.totalPrice
     }
-
+    
     console.log('Submitting order:', orderData)
-
+    
     // Submit to API
     const response = await fetch('/api/orders', {
       method: 'POST',
@@ -323,7 +323,7 @@ const submitOrder = async () => {
 
     if (result.success) {
       // Order submitted successfully
-      orderComplete.value = true
+    orderComplete.value = true
       orderReference.value = result.data.orderNumber
       orderMessage.value = result.data.message
       

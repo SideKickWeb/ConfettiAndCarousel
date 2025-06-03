@@ -11,8 +11,8 @@ export default defineNuxtConfig({
     jwtSecret: process.env.JWT_SECRET || 'your-fallback-secret-key',
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3000'
-    }
-  },
+      }
+    },
   // Nitro configuration for Vercel
   nitro: {
     preset: 'vercel',

@@ -1,4 +1,4 @@
-import prisma from '../../../lib/prisma.js'
+import prisma from '../../lib/prisma.js'
 import { requireAuth, checkRateLimit, getClientIP } from '../../utils/auth'
 import { handleSafeError, handleMethodNotAllowed } from '../../utils/error-handling'
 

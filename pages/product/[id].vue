@@ -120,7 +120,7 @@
               {{ product.category.name }}
               </div>
               <h1 class="product-title">{{ product.name }}</h1>
-              
+            
               <!-- Availability Status -->
               <div class="availability-status">
                 <span v-if="product.canBuy && product.canHire" class="status-badge status-both">
@@ -169,7 +169,7 @@
                 </span>
               </div>
             </div>
-
+            
             <!-- Product Description -->
             <div class="product-description" v-if="product.description">
               <p>{{ product.description }}</p>
@@ -312,7 +312,7 @@
                     <path d="M16 10a4 4 0 01-8 0"></path>
                   </svg>
                   Add to Order
-                </button>
+              </button>
                 
                 <button 
                   v-if="product.canHire" 
@@ -339,8 +339,8 @@
                     <polyline points="22,6 12,13 2,6"></polyline>
                   </svg>
                   Contact for Quote
-                </button>
-              </div>
+              </button>
+            </div>
 
               <!-- Additional Info -->
               <div class="additional-info">
@@ -1057,7 +1057,7 @@ const getColorFromValue = (value) => {
 @media (max-width: 768px) {
   .product-title {
     font-size: 1.5rem;
-  }
+}
 }
 
 /* Availability Status */
@@ -1359,7 +1359,7 @@ const getColorFromValue = (value) => {
   flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
-}
+  }
 
 /* Button Styles */
 .btn {
@@ -1578,7 +1578,7 @@ const getColorFromValue = (value) => {
 
 .delivery-option h4 {
   margin-bottom: 1rem;
-}
+  }
 
 .delivery-option p {
   margin: 0;
@@ -1786,8 +1786,8 @@ const getColorFromValue = (value) => {
 
 .search-container {
   position: relative;
-  max-width: 500px;
-  margin: 0 auto;
+    max-width: 500px;
+    margin: 0 auto;
 }
 
 .search-input-wrapper {

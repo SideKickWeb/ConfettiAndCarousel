@@ -1,8 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../../lib/prisma.js'
 import jwt from 'jsonwebtoken'
-
-// Initialize Prisma client properly
-const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
   try {

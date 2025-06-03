@@ -1,4 +1,4 @@
-import prisma from '../../../lib/prisma.js'
+import prisma from '../../lib/prisma.js'
 import { getCookie } from 'h3'
 import jwt from 'jsonwebtoken'
 

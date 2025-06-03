@@ -1,4 +1,4 @@
-import prisma from '../../../lib/prisma.js'
+import prisma from '../../lib/prisma.js'
 import bcrypt from 'bcryptjs'
 import { requireAuth, validateInput, checkRateLimit, getClientIP } from '../../utils/auth'
 import { 

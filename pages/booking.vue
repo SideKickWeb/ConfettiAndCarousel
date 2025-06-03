@@ -41,16 +41,16 @@
               <div class="form-group">
                 <label for="eventLocation">Event Location</label>
                 <input type="text" id="eventLocation" v-model="booking.location" placeholder="Where will your event be held?" required>
-              </div>
             </div>
-            
+          </div>
+
             <!-- Description field outside grid -->
             <div class="description-field" style="margin-top: 1.5rem; width: 100%; max-width: 100%; box-sizing: border-box;">
               <label for="description" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-primary);">Event Description (Optional)</label>
               <textarea id="description" v-model="booking.description" rows="3" placeholder="Tell us more about your event..." style="width: 100%; max-width: 100%; box-sizing: border-box; margin: 0; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--bg-secondary); color: var(--text-primary); resize: vertical; min-height: 80px; font-family: inherit; line-height: 1.4;"></textarea>
             </div>
-          </div>
-
+            </div>
+            
           <!-- Customer Information Section -->
           <div class="form-section">
             <h2>Your Information</h2>
@@ -63,19 +63,19 @@
               <div class="form-group">
                 <label for="lastName">Last Name</label>
                 <input type="text" id="lastName" v-model="customerInfo.lastName" required placeholder="Your last name">
-              </div>
-              
+                  </div>
+                  
               <div class="form-group">
                 <label for="email">Email</label>
                 <input type="email" id="email" v-model="customerInfo.email" required placeholder="Your email address">
-              </div>
+                    </div>
               
               <div class="form-group">
                 <label for="phone">Phone</label>
                 <input type="tel" id="phone" v-model="customerInfo.phone" placeholder="Your phone number (optional)">
+                </div>
               </div>
             </div>
-          </div>
 
           <!-- Products Section -->
           <div class="form-section">
@@ -190,7 +190,7 @@
         </form>
       </div>
     </div>
-    
+
     <!-- Toast Notifications -->
     <div class="toast-container">
       <div v-for="(toast, index) in toasts" :key="index" class="toast">
@@ -290,13 +290,13 @@ const loadEventItemsFromStorage = () => {
         const existingIndex = selectedProducts.value.findIndex(selected => 
           selected.product.id === item.id
         );
-        
-        if (existingIndex >= 0) {
+    
+    if (existingIndex >= 0) {
           // Increment quantity if already exists
           selectedProducts.value[existingIndex].quantity += item.quantity;
-        } else {
+    } else {
           // Add as new item with proper custom options format
-          selectedProducts.value.push({
+      selectedProducts.value.push({
             product: item,
             quantity: item.quantity,
             selectedOptions: item.selectedOptions || {},
@@ -325,7 +325,7 @@ const loadEventItemsFromStorage = () => {
                 value: valueId
               };
             }) : [],
-            isNewlyAdded: true
+        isNewlyAdded: true
           });
         }
       }
@@ -385,7 +385,7 @@ const saveFormData = () => {
     localStorage.setItem('bookingAcknowledgment', JSON.stringify(acknowledgmentChecked.value));
   } catch (error) {
     console.error('Error saving form data:', error);
-  }
+    }
 };
 
 // Clear saved form data from localStorage
@@ -491,7 +491,7 @@ const submitBooking = async () => {
       description: booking.value.description,
       items: selectedProducts.value.map(item => ({
         product: item.product,
-        quantity: item.quantity,
+      quantity: item.quantity,
         selectedOptions: item.selectedOptions || {}
       }))
     }
@@ -518,7 +518,7 @@ const submitBooking = async () => {
       
       // Clear the form and selected products
       resetForm()
-      submitted.value = true
+    submitted.value = true
       showToast(result.data.message || 'Event booking submitted successfully!')
       console.log('Event booking submitted successfully:', result.data)
     } else {
@@ -1417,7 +1417,7 @@ input:focus, select:focus, textarea:focus {
   .form-section {
     padding: 1.5rem;
   }
-  
+
   .form-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
