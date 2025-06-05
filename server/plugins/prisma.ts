@@ -1,5 +1,5 @@
 // Import the singleton prisma instance instead of creating a new one
-import prisma from '../../lib/prisma'
+import prisma from '../utils/prisma'
 import { defineNitroPlugin } from 'nitropack/runtime'
 
 export default defineNitroPlugin(async () => {

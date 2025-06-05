@@ -1,4 +1,5 @@
 import { defineEventHandler } from 'h3'
+import prisma from '../utils/prisma'
 
 // Instagram API configuration
 const INSTAGRAM_ACCESS_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN
@@ -49,8 +50,6 @@ export default defineEventHandler(async (event) => {
     }
 
     // Dynamic Prisma import
-    const { getPrismaClient } = await import('../../lib/prisma.js')
-    const prisma = await getPrismaClient()
 
     let allPosts: any[] = [];
     let nextPageUrl = `https://graph.instagram.com/v12.0/${INSTAGRAM_USER_ID}/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username&access_token=${INSTAGRAM_ACCESS_TOKEN}&limit=25`;

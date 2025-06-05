@@ -1,8 +1,11 @@
 <!-- HeroSection.vue -->
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from "vue";
 
-const heroSettings = ref(null);
+const heroSettings = ref({
+  title: "Loading..",
+  description: "Loading..",
+});
 const isLoading = ref(true);
 const error = ref(null);
 
@@ -10,38 +13,39 @@ const error = ref(null);
 const fetchHeroSettings = async () => {
   isLoading.value = true;
   error.value = null;
-  
+
   try {
-    console.log('Fetching hero settings from API...');
-    const response = await $fetch('/api/hero');
-    console.log('API response:', response);
-    
-    if (response && response.id) {
-      heroSettings.value = response;
-      console.log('Hero settings loaded successfully:', heroSettings.value);
+    console.log("Fetching hero settings from API...");
+    const response = await $fetch("/api/hero");
+    console.log("API response:", response);
+
+    if (response && response.success == true) {
+      heroSettings.value = response.data;
+      console.log("Hero settings loaded successfully:", heroSettings.value);
     } else {
-      console.warn('API returned empty or invalid data');
+      console.warn("API returned empty or invalid data");
       // Use fallback if data is empty or invalid
       heroSettings.value = {
-        imageUrl: '/images/gallery/placeholder.jpg',
-        title: 'Fallback: API returned empty data',
-        description: 'Please check that you have hero settings configured in the database.',
-        buttonText: 'Learn More',
-        buttonLink: '/contact',
-        textPosition: 'left'
+        imageUrl: "/images/gallery/placeholder.jpg",
+        title: "Fallback: API returned empty data",
+        description:
+          "Please check that you have hero settings configured in the database.",
+        buttonText: "Learn More",
+        buttonLink: "/contact",
+        textPosition: "left",
       };
     }
   } catch (err) {
-    console.error('Error fetching hero settings:', err);
-    error.value = err.message || 'Failed to fetch hero settings';
+    console.error("Error fetching hero settings:", err);
+    error.value = err.message || "Failed to fetch hero settings";
     // Set default hero settings if API fails
     heroSettings.value = {
-      imageUrl: '/images/gallery/placeholder.jpg',
-      title: 'Error: ' + (err.message || 'Unknown error'),
-      description: 'Could not load hero settings from the database.',
-      buttonText: 'Learn More',
-      buttonLink: '/contact',
-      textPosition: 'left'
+      imageUrl: "/images/gallery/placeholder.jpg",
+      title: "Error: " + (err.message || "Unknown error"),
+      description: "Could not load hero settings from the database.",
+      buttonText: "Learn More",
+      buttonLink: "/contact",
+      textPosition: "left",
     };
   } finally {
     isLoading.value = false;
@@ -50,22 +54,25 @@ const fetchHeroSettings = async () => {
 
 // Load hero settings on mount
 onMounted(() => {
-  console.log('HeroSection component mounted');
+  console.log("HeroSection component mounted");
   fetchHeroSettings();
 });
 
 // Calculate hero content classes based on text position
 const heroContentClasses = computed(() => {
-  if (!heroSettings.value) return 'hero-content-left';
-  
-  const position = heroSettings.value.textPosition || 'left';
-  console.log('Text position:', position);
-  
+  if (!heroSettings.value) return "hero-content-left";
+
+  const position = heroSettings.value.textPosition || "left";
+  console.log("Text position:", position);
+
   switch (position) {
-    case 'center': return 'hero-content-center';
-    case 'right': return 'hero-content-right';
-    case 'left':
-    default: return 'hero-content-left';
+    case "center":
+      return "hero-content-center";
+    case "right":
+      return "hero-content-right";
+    case "left":
+    default:
+      return "hero-content-left";
   }
 });
 </script>
@@ -73,16 +80,16 @@ const heroContentClasses = computed(() => {
 <template>
   <section class="hero-section">
     <div class="hero-overlay"></div>
-    <img 
-      :src="heroSettings?.imageUrl || '/images/gallery/placeholder.jpg'" 
-      :alt="heroSettings?.title || 'Hero Image'" 
+    <img
+      :src="heroSettings?.imageUrl || '/images/gallery/placeholder.jpg'"
+      :alt="heroSettings?.title || 'Hero Image'"
       class="hero-image"
-    >
+    />
     <div class="hero-content" :class="heroContentClasses">
-      <h1>{{ heroSettings?.title || 'Loading...' }}</h1>
-      <p>{{ heroSettings?.description || '' }}</p>
+      <h1>{{ heroSettings?.title || "Loading..." }}</h1>
+      <p>{{ heroSettings?.description || "" }}</p>
       <a :href="heroSettings?.buttonLink || '/contact'" class="hero-button">
-        {{ heroSettings?.buttonText || 'Learn More' }}
+        {{ heroSettings?.buttonText || "Learn More" }}
       </a>
     </div>
   </section>
@@ -112,7 +119,10 @@ const heroContentClasses = computed(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--hero-bg, linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)));
+  background: var(
+    --hero-bg,
+    linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3))
+  );
   z-index: 1;
 }
 
@@ -207,18 +217,19 @@ const heroContentClasses = computed(() => {
     max-width: 90%;
     padding: 1.5rem;
   }
-  
+
   .hero-button {
     padding: 0.75rem 1.5rem;
   }
-  
-  .hero-content-left, .hero-content-right {
+
+  .hero-content-left,
+  .hero-content-right {
     margin: 0 auto;
     left: 5%;
     right: 5%;
     width: 90%;
   }
-  
+
   .hero-content-center {
     width: 90%;
   }
@@ -228,13 +239,15 @@ const heroContentClasses = computed(() => {
   .hero-section {
     height: 80vh; /* Slightly smaller on mobile */
   }
-  
+
   .hero-content {
     padding: 1.25rem;
     width: 95%;
   }
-  
-  .hero-content-left, .hero-content-right, .hero-content-center {
+
+  .hero-content-left,
+  .hero-content-right,
+  .hero-content-center {
     left: 2.5%;
     right: 2.5%;
     width: 95%;
@@ -253,22 +266,22 @@ const heroContentClasses = computed(() => {
   .hero-section {
     height: 100vh;
   }
-  
+
   .hero-content {
     max-width: 70%;
     padding: 1rem;
   }
-  
+
   .hero-content h1 {
     margin-bottom: 0.5rem;
   }
-  
+
   .hero-content p {
     margin-bottom: 1rem;
   }
-  
+
   .hero-button {
     padding: 0.5rem 1rem;
   }
 }
-</style> 
+</style>

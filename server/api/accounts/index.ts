@@ -1,76 +1,93 @@
-import { randomUUID } from 'crypto'
+import { defineEventHandler, getMethod, readBody } from 'h3'
+import { hash } from 'bcrypt'
+import prisma from '../../utils/prisma'
 
 export default defineEventHandler(async (event) => {
-  // Dynamic Prisma import
-  const { getPrismaClient } = await import('../../../lib/prisma.js')
-  const prisma = await getPrismaClient()
   const method = getMethod(event)
 
-  // GET - Fetch all accounts (admin only)
+  // GET - Fetch user profile
   if (method === 'GET') {
     try {
-      const accounts = await prisma.account.findMany({
+      const userId = event.context.auth?.userId
+      if (!userId) {
+        return {
+          statusCode: 401,
+          message: 'Unauthorized'
+        }
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
         select: {
           id: true,
           email: true,
           firstName: true,
           lastName: true,
           role: true,
-          accessLevel: true,
-          active: true,
           createdAt: true,
           updatedAt: true
         }
       })
-      return accounts
+
+      if (!user) {
+        return {
+          statusCode: 404,
+          message: 'User not found'
+        }
+      }
+
+      return user
     } catch (error) {
-      console.error('Error fetching accounts:', error)
+      console.error('Error fetching user profile:', error)
       return {
         statusCode: 500,
-        message: 'Failed to fetch accounts'
+        message: 'Failed to fetch user profile'
       }
     }
   }
 
-  // POST - Create a new account
-  if (method === 'POST') {
+  // PUT - Update user profile
+  if (method === 'PUT') {
     try {
-      const body = await readBody(event)
-      
-      // Check if account already exists
-      const existingAccount = await prisma.account.findUnique({
-        where: { email: body.email }
-      })
-      
-      if (existingAccount) {
+      const userId = event.context.auth?.userId
+      if (!userId) {
         return {
-          statusCode: 400,
-          message: 'An account with this email already exists'
+          statusCode: 401,
+          message: 'Unauthorized'
         }
       }
-      
-      const account = await prisma.account.create({
-        data: {
-          id: body.id || randomUUID(),
-          email: body.email,
-          firstName: body.firstName || '',
-          lastName: body.lastName || '',
-          password: body.password, // In a real app, this should be hashed
-          role: body.role || 'user',
-          accessLevel: body.accessLevel || 'basic',
-          updatedAt: new Date()
+
+      const body = await readBody(event)
+      const updateData: any = {
+        firstName: body.firstName,
+        lastName: body.lastName
+      }
+
+      // Only update password if provided
+      if (body.password) {
+        updateData.password = await hash(body.password, 10)
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: updateData,
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true
         }
       })
-      
-      // Remove password from response
-      const { password, ...accountWithoutPassword } = account
-      
-      return accountWithoutPassword
+
+      return updatedUser
     } catch (error) {
-      console.error('Error creating account:', error)
+      console.error('Error updating user profile:', error)
       return {
         statusCode: 500,
-        message: 'Failed to create account'
+        message: 'Failed to update user profile'
       }
     }
   }

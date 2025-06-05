@@ -1,15 +1,12 @@
+import prisma from "../utils/prisma";
+
 export default defineEventHandler(async (event) => {
   try {
     const method = getMethod(event);
 
     // GET - Fetch active hero settings
-    if (method === 'GET') {
-      console.log('Fetching hero settings');
-      
-      // Dynamic Prisma import
-      const { getPrismaClient } = await import('../../lib/prisma.js')
-      const prisma = await getPrismaClient()
-      
+    if (method === "GET") {
+      console.log("Fetching hero settings");
       const settings = await prisma.heroSetting.findFirst({
         where: { active: true },
         select: {
@@ -22,29 +19,18 @@ export default defineEventHandler(async (event) => {
           textPosition: true,
           active: true,
           createdAt: true,
-          updatedAt: true
-        }
+          updatedAt: true,
+        },
       });
-      
-      return { 
-        success: true, 
-        data: settings 
-      };
+      return { success: true, data: settings };
     }
-
-    // Method not allowed
-    return {
-      success: false,
-      message: 'Method not allowed'
-    };
-    
+    return { success: false, message: "Method not allowed" };
   } catch (error) {
-    console.error('Error with hero settings:', error);
-    
+    console.error("Error with hero settings:", error);
     return {
       success: false,
-      message: 'Failed to fetch hero settings',
-      error: error.message
+      message: "Failed to fetch hero settings",
+      error: error.message,
     };
   }
-}); 
+});

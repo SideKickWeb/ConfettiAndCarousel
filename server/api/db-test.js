@@ -1,32 +1,30 @@
+import prisma from "../utils/prisma";
+
 export default defineEventHandler(async (event) => {
   try {
-    // Dynamic Prisma import
-    const { getPrismaClient } = await import('../../lib/prisma.js')
-    const prisma = await getPrismaClient()
-    
     // Test database connection
-    await prisma.$connect()
-    console.log('Database connection successful')
-    
+    await prisma.$connect();
+    console.log("Database connection successful");
+
     // Try to query the product count
-    const productCount = await prisma.product.count()
-    
+    const productCount = await prisma.product.count();
+
     return {
-      status: 'ok',
-      message: 'Database connection successful',
+      status: "ok",
+      message: "Database connection successful",
       productCount,
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    };
   } catch (error) {
-    console.error('Database connection error:', error)
-    
+    console.error("Database connection error:", error);
+
     return createError({
       statusCode: 500,
       message: `Database connection failed: ${error.message}`,
       error: {
         code: error.code,
-        meta: error.meta
-      }
-    })
+        meta: error.meta,
+      },
+    });
   }
-}) 
+});

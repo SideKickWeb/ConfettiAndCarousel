@@ -1,10 +1,9 @@
 import { randomUUID } from 'crypto'
+import { defineEventHandler, getMethod, readBody } from 'h3'
+import prisma from '../../utils/prisma'
 
-export default defineEventHandler(async (eventHandler) => {
-  // Dynamic Prisma import
-  const { getPrismaClient } = await import('../../../lib/prisma.js')
-  const prisma = await getPrismaClient()
-  const method = getMethod(eventHandler)
+export default defineEventHandler(async (event) => {
+  const method = getMethod(event)
 
   // GET - Fetch all events
   if (method === 'GET') {
@@ -27,7 +26,7 @@ export default defineEventHandler(async (eventHandler) => {
   // POST - Create a new event
   if (method === 'POST') {
     try {
-      const body = await readBody(eventHandler)
+      const body = await readBody(event)
       
       const newEvent = await prisma.event.create({
         data: {

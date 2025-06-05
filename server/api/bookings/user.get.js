@@ -1,31 +1,31 @@
-import { requireAuth } from '../../utils/auth'
-import { checkRateLimit, getClientIP } from '../../utils/auth'
-import { handleSafeError, handleMethodNotAllowed } from '../../utils/error-handling'
+import { requireAuth } from "../../utils/auth";
+import { checkRateLimit, getClientIP } from "../../utils/auth";
+import {
+  handleSafeError,
+  handleMethodNotAllowed,
+} from "../../utils/error-handling";
+import prisma from "../../utils/prisma";
 
 export default defineEventHandler(async (event) => {
   try {
     // Only allow GET method
-    if (getMethod(event) !== 'GET') {
-      throw handleMethodNotAllowed(getMethod(event), ['GET'])
+    if (getMethod(event) !== "GET") {
+      throw handleMethodNotAllowed(getMethod(event), ["GET"]);
     }
 
     // Apply rate limiting to prevent abuse
-    const clientIP = getClientIP(event) || 'unknown'
-    checkRateLimit(`bookings-${clientIP}`, 20, 60000) // 20 requests per minute
+    const clientIP = getClientIP(event) || "unknown";
+    checkRateLimit(`bookings-${clientIP}`, 20, 60000); // 20 requests per minute
 
     // Require authentication
-    const user = await requireAuth(event)
-    
-    // Dynamic Prisma import
-    const { getPrismaClient } = await import('../../../lib/prisma.js')
-    const prisma = await getPrismaClient()
+    const user = await requireAuth(event);
 
-    console.log(`Fetching bookings for user: ${user.email}`)
+    console.log(`Fetching bookings for user: ${user.email}`);
 
     // Get user events/bookings - only for the authenticated user
     const bookings = await prisma.event.findMany({
       where: {
-        customerId: user.id // Ensure users can only see their own bookings
+        customerId: user.id, // Ensure users can only see their own bookings
       },
       include: {
         Customer: {
@@ -33,8 +33,8 @@ export default defineEventHandler(async (event) => {
             id: true,
             firstName: true,
             lastName: true,
-            email: true
-          }
+            email: true,
+          },
         },
         EventItem: {
           include: {
@@ -48,8 +48,8 @@ export default defineEventHandler(async (event) => {
                 active: true,
                 categoryId: true,
                 canBuy: true,
-                canHire: true
-              }
+                canHire: true,
+              },
             },
             EventItemOption: {
               select: {
@@ -57,27 +57,27 @@ export default defineEventHandler(async (event) => {
                 optionName: true,
                 value: true,
                 label: true,
-                priceAdjustment: true
-              }
-            }
-          }
-        }
+                priceAdjustment: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
-        startDate: 'desc'
-      }
-    })
+        startDate: "desc",
+      },
+    });
 
-    console.log(`Found ${bookings.length} bookings for user: ${user.email}`)
+    console.log(`Found ${bookings.length} bookings for user: ${user.email}`);
 
     return {
       success: true,
-      data: bookings
-    }
+      data: bookings,
+    };
   } catch (error) {
-    console.error('Error fetching user bookings:', error)
-    
+    console.error("Error fetching user bookings:", error);
+
     // Use centralized error handling
-    handleSafeError(error, 'SERVER_ERROR')
+    handleSafeError(error, "SERVER_ERROR");
   }
-}) 
+});

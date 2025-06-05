@@ -1,8 +1,7 @@
-export default defineEventHandler(async (event) => {
-  // Dynamic Prisma import
-  const { getPrismaClient } = await import('../../../lib/prisma.js')
-  const prisma = await getPrismaClient()
+import { defineEventHandler, getMethod, readBody } from 'h3'
+import prisma from '../../utils/prisma'
 
+export default defineEventHandler(async (event) => {
   const method = getMethod(event)
   const params = event.context.params || {}
   const id = params.id
@@ -20,19 +19,8 @@ export default defineEventHandler(async (event) => {
       const eventData = await prisma.event.findUnique({
         where: { id },
         include: {
-          client: true,
-          staffAssigned: {
-            include: {
-              staff: true
-            }
-          },
-          tasks: true,
-          budget: true,
-          pipeline: {
-            include: {
-              stage: true
-            }
-          }
+          Customer: true,
+          tasks: true
         }
       })
 
@@ -61,18 +49,17 @@ export default defineEventHandler(async (event) => {
       const updatedEvent = await prisma.event.update({
         where: { id },
         data: {
-          eventName: body.eventName,
-          eventType: body.eventType,
-          eventDate: body.eventDate ? new Date(body.eventDate) : undefined,
-          startTime: body.startTime ? new Date(body.startTime) : undefined,
-          endTime: body.endTime ? new Date(body.endTime) : undefined,
-          venue: body.venue,
-          venueAddress: body.venueAddress,
+          title: body.eventName,
+          description: body.description,
+          startDate: body.eventDate ? new Date(body.eventDate).toISOString() : undefined,
+          startTime: body.startTime,
+          endTime: body.endTime,
+          location: body.venue,
           expectedGuests: body.expectedGuests,
           status: body.status
         },
         include: {
-          client: true
+          Customer: true
         }
       })
       

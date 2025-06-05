@@ -3,12 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "prisma generate && cross-env NODE_OPTIONS=\"--max_old_space_size=4096\" nuxt build",
+    "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && cross-env NODE_OPTIONS=\"--max_old_space_size=4096\" nuxt build"
+    "postinstall": "nuxt prepare && prisma generate --generate"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.5.1",

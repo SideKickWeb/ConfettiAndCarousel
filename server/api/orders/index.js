@@ -1,66 +1,60 @@
-import { requireAuth } from '../../utils/auth'
+import { requireAuth } from "../../utils/auth";
+import prisma from "../../utils/prisma";
 
 export default defineEventHandler(async (event) => {
   try {
     // Require authentication
-    const user = await requireAuth(event)
-    
-    // Dynamic Prisma import
-    const { getPrismaClient } = await import('../../../lib/prisma.js')
-    const prisma = await getPrismaClient()
+    const user = await requireAuth(event);
 
     const method = getMethod(event);
 
-    if (method === 'GET') {
+    if (method === "GET") {
       try {
         const orders = await prisma.order.findMany({
           include: {
             Customer: true,
-            OrderItem: {
-              include: {
-                Product: true,
-                OrderItemOption: true
-              }
-            }
+            OrderItems: { include: { Product: true } },
           },
-          orderBy: {
-            createdAt: 'desc'
-          }
         });
 
         return {
           success: true,
-          data: orders
+          data: orders,
+          count: orders.length,
         };
       } catch (error) {
-        console.error('Error fetching orders:', error);
-        throw createError({
-          statusCode: 500,
-          statusMessage: 'Failed to fetch orders'
-        });
+        console.error("Error fetching orders:", error);
+        return {
+          success: false,
+          message: "Failed to fetch orders",
+          error: error.message,
+        };
       }
     }
 
-    if (method === 'POST') {
+    if (method === "POST") {
       try {
         const body = await readBody(event);
-        console.log('API: Creating order with data:', body);
+        console.log("API: Creating order with data:", body);
 
         // Validate required fields
         if (!body.customerInfo || !body.items || body.items.length === 0) {
           throw createError({
             statusCode: 400,
-            statusMessage: 'Missing required order information'
+            statusMessage: "Missing required order information",
           });
         }
 
         // Generate order number
-        const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+        const orderNumber = `ORD-${Date.now()}-${Math.random()
+          .toString(36)
+          .substr(2, 4)
+          .toUpperCase()}`;
 
         const result = await prisma.$transaction(async (prisma) => {
           // Create or find customer
           let customer = await prisma.customer.findUnique({
-            where: { email: body.customerInfo.email }
+            where: { email: body.customerInfo.email },
           });
 
           if (!customer) {
@@ -71,13 +65,16 @@ export default defineEventHandler(async (event) => {
                 firstName: body.customerInfo.firstName,
                 lastName: body.customerInfo.lastName,
                 phone: body.customerInfo.phone || null,
-                updatedAt: new Date()
-              }
+                updatedAt: new Date(),
+              },
             });
           }
 
           // Calculate totals
-          const subtotal = body.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+          const subtotal = body.items.reduce(
+            (sum, item) => sum + item.product.price * item.quantity,
+            0
+          );
           const finalAmount = subtotal; // Add tax/shipping calculations if needed
 
           // Create order
@@ -88,12 +85,16 @@ export default defineEventHandler(async (event) => {
               orderNumber: orderNumber,
               totalAmount: subtotal,
               finalAmount: finalAmount,
-              status: 'pending',
-              stage: 'pending_review',
-              paymentStatus: 'unpaid',
+              status: "pending",
+              stage: "pending_review",
+              paymentStatus: "unpaid",
               customerNotes: body.notes || null,
-              updatedAt: new Date()
-            }
+              updatedAt: new Date(),
+            },
+            include: {
+              Customer: true,
+              OrderItems: { include: { Product: true } },
+            },
           });
 
           // Create order items with their custom options
@@ -105,12 +106,16 @@ export default defineEventHandler(async (event) => {
                 quantity: item.quantity,
                 unitPrice: item.product.price,
                 totalPrice: item.quantity * item.product.price,
-                notes: item.notes || null
-              }
+                notes: item.notes || null,
+              },
             });
 
             // Create order item options for custom fields
-            if (item.customOptions && Array.isArray(item.customOptions) && item.customOptions.length > 0) {
+            if (
+              item.customOptions &&
+              Array.isArray(item.customOptions) &&
+              item.customOptions.length > 0
+            ) {
               for (const customOption of item.customOptions) {
                 await prisma.orderItemOption.create({
                   data: {
@@ -119,8 +124,8 @@ export default defineEventHandler(async (event) => {
                     optionName: customOption.optionName,
                     value: customOption.value,
                     label: customOption.label || customOption.value,
-                    priceAdjustment: customOption.priceAdjustment || 0
-                  }
+                    priceAdjustment: customOption.priceAdjustment || 0,
+                  },
                 });
               }
             }
@@ -132,47 +137,49 @@ export default defineEventHandler(async (event) => {
               id: randomUUID(),
               orderId: order.id,
               fromStatus: null,
-              toStatus: 'pending',
+              toStatus: "pending",
               fromStage: null,
-              toStage: 'pending_review',
-              notes: 'Order submitted by customer',
+              toStage: "pending_review",
+              notes: "Order submitted by customer",
               changedBy: customer.id,
-              changedAt: new Date()
-            }
+              changedAt: new Date(),
+            },
           });
 
           return order;
         });
 
-        console.log('API: Order created successfully:', result.id);
+        console.log("API: Order created successfully:", result.id);
 
         return {
           success: true,
           data: {
             orderId: result.id,
             orderNumber: orderNumber,
-            message: 'Order submitted successfully! You will be contacted within 24 hours to confirm details and arrange collection.'
-          }
+            message:
+              "Order submitted successfully! You will be contacted within 24 hours to confirm details and arrange collection.",
+          },
         };
-
       } catch (error) {
-        console.error('Error creating order:', error);
-        throw createError({
-          statusCode: 500,
-          statusMessage: 'Failed to create order'
-        });
+        console.error("Error creating order:", error);
+        return {
+          success: false,
+          message: "Failed to create order",
+          error: error.message,
+        };
       }
     }
 
-    throw createError({
-      statusCode: 405,
-      statusMessage: 'Method not allowed'
-    });
+    return {
+      success: false,
+      message: "Method not allowed",
+    };
   } catch (error) {
-    console.error('Error in API handler:', error);
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Failed to process request'
-    });
+    console.error("Error in API handler:", error);
+    return {
+      success: false,
+      message: "Failed to process request",
+      error: error.message,
+    };
   }
-}); 
+});

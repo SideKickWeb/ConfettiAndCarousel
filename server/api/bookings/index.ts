@@ -1,59 +1,60 @@
-import { randomUUID } from 'crypto'
+import { defineEventHandler, getMethod, readBody } from 'h3'
+import prisma from '../../utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const method = getMethod(event)
 
-  // Dynamic Prisma import
-  const { getPrismaClient } = await import('../../../lib/prisma.js')
-  const prisma = await getPrismaClient()
-
-  // GET - Fetch all events (bookings)
+  // GET - Fetch all bookings
   if (method === 'GET') {
     try {
-      const events = await prisma.event.findMany({
+      const bookings = await prisma.booking.findMany({
         include: {
-          Customer: true
+          Customer: true,
+          Location: true,
+          Event: true
         }
       })
-      return events
+      return bookings
     } catch (error) {
-      console.error('Error fetching events:', error)
+      console.error('Error fetching bookings:', error)
       return {
         statusCode: 500,
-        message: 'Failed to fetch events'
+        message: 'Failed to fetch bookings'
       }
     }
   }
 
-  // POST - Create a new event (booking)
+  // POST - Create a new booking
   if (method === 'POST') {
     try {
       const body = await readBody(event)
       
-      const newEvent = await prisma.event.create({
+      const newBooking = await prisma.booking.create({
         data: {
-          id: body.id || randomUUID(),
-          title: body.title || 'New Event',
-          description: body.description,
-          location: body.location || '',
-          startDate: new Date(body.startDate),
-          endDate: body.endDate ? new Date(body.endDate) : null,
-          startTime: body.startTime || '',
           customerId: body.customerId,
-          customerNotes: body.notes,
-          updatedAt: new Date()
+          locationId: body.locationId,
+          eventId: body.eventId,
+          startDate: new Date(body.startDate),
+          endDate: new Date(body.endDate),
+          status: body.status || 'pending',
+          notes: body.notes,
+          totalAmount: body.totalAmount,
+          depositAmount: body.depositAmount,
+          isConfirmed: body.isConfirmed ?? false
         },
         include: {
-          Customer: true
+          Customer: true,
+          Location: true,
+          Event: true
         }
       })
       
-      return newEvent
+      return newBooking
     } catch (error) {
-      console.error('Error creating event:', error)
+      console.error('Error creating booking:', error)
       return {
         statusCode: 500,
-        message: 'Failed to create event'
+        message: 'Failed to create booking'
       }
     }
   }
