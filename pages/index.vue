@@ -796,7 +796,11 @@ body {
   left: 0;
   right: 0;
   height: 100%;
-  background: url("/images/pattern.png") repeat;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 3px, transparent 3px),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 3px, transparent 3px),
+    radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.3) 3px, transparent 3px);
+  background-size: 50px 50px;
   opacity: 0.05;
   z-index: 0;
 }
