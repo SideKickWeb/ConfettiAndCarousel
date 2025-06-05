@@ -133,100 +133,6 @@ exports.Prisma.AccountScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.CustomerScalarFieldEnum = {
-  id: 'id',
-  email: 'email',
-  firstName: 'firstName',
-  lastName: 'lastName',
-  phone: 'phone',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.EventScalarFieldEnum = {
-  id: 'id',
-  title: 'title',
-  description: 'description',
-  location: 'location',
-  startDate: 'startDate',
-  endDate: 'endDate',
-  customerId: 'customerId',
-  status: 'status',
-  staffNotes: 'staffNotes',
-  assignedStaffId: 'assignedStaffId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  customerNotes: 'customerNotes',
-  depositAmount: 'depositAmount',
-  depositPaid: 'depositPaid',
-  endTime: 'endTime',
-  finalPaymentPaid: 'finalPaymentPaid',
-  reviewedAt: 'reviewedAt',
-  reviewedBy: 'reviewedBy',
-  stage: 'stage',
-  startTime: 'startTime',
-  totalAmount: 'totalAmount'
-};
-
-exports.Prisma.HeroSettingScalarFieldEnum = {
-  id: 'id',
-  imageUrl: 'imageUrl',
-  title: 'title',
-  description: 'description',
-  buttonText: 'buttonText',
-  buttonLink: 'buttonLink',
-  textPosition: 'textPosition',
-  active: 'active',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.OrderScalarFieldEnum = {
-  id: 'id',
-  customerId: 'customerId',
-  totalAmount: 'totalAmount',
-  status: 'status',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  assignedStaffId: 'assignedStaffId',
-  billingAddress: 'billingAddress',
-  customerNotes: 'customerNotes',
-  deliveredAt: 'deliveredAt',
-  discountAmount: 'discountAmount',
-  finalAmount: 'finalAmount',
-  orderNumber: 'orderNumber',
-  paymentStatus: 'paymentStatus',
-  reviewedAt: 'reviewedAt',
-  reviewedBy: 'reviewedBy',
-  shippedAt: 'shippedAt',
-  shippingAddress: 'shippingAddress',
-  shippingAmount: 'shippingAmount',
-  staffNotes: 'staffNotes',
-  stage: 'stage',
-  taxAmount: 'taxAmount'
-};
-
-exports.Prisma.ProductScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  description: 'description',
-  price: 'price',
-  imageUrl: 'imageUrl',
-  active: 'active',
-  categoryId: 'categoryId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  canBuy: 'canBuy',
-  canHire: 'canHire',
-  hasRangePrice: 'hasRangePrice',
-  hasUnitPrice: 'hasUnitPrice',
-  maxPrice: 'maxPrice',
-  minPrice: 'minPrice',
-  minQuantity: 'minQuantity',
-  unitPrice: 'unitPrice',
-  unitType: 'unitType'
-};
-
 exports.Prisma.StaffInvitationScalarFieldEnum = {
   id: 'id',
   email: 'email',
@@ -241,11 +147,27 @@ exports.Prisma.StaffInvitationScalarFieldEnum = {
   expiresAt: 'expiresAt'
 };
 
-exports.Prisma.ProductCategoryScalarFieldEnum = {
+exports.Prisma.EventScalarFieldEnum = {
   id: 'id',
-  name: 'name',
+  title: 'title',
   description: 'description',
-  active: 'active',
+  location: 'location',
+  startDate: 'startDate',
+  startTime: 'startTime',
+  endDate: 'endDate',
+  endTime: 'endTime',
+  customerId: 'customerId',
+  status: 'status',
+  stage: 'stage',
+  staffNotes: 'staffNotes',
+  customerNotes: 'customerNotes',
+  totalAmount: 'totalAmount',
+  depositAmount: 'depositAmount',
+  depositPaid: 'depositPaid',
+  finalPaymentPaid: 'finalPaymentPaid',
+  assignedStaffId: 'assignedStaffId',
+  reviewedBy: 'reviewedBy',
+  reviewedAt: 'reviewedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -285,6 +207,62 @@ exports.Prisma.EventStatusHistoryScalarFieldEnum = {
   changedAt: 'changedAt'
 };
 
+exports.Prisma.CustomerScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  firstName: 'firstName',
+  lastName: 'lastName',
+  phone: 'phone',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProductScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  price: 'price',
+  hasRangePrice: 'hasRangePrice',
+  minPrice: 'minPrice',
+  maxPrice: 'maxPrice',
+  hasUnitPrice: 'hasUnitPrice',
+  unitPrice: 'unitPrice',
+  unitType: 'unitType',
+  minQuantity: 'minQuantity',
+  imageUrl: 'imageUrl',
+  active: 'active',
+  canBuy: 'canBuy',
+  canHire: 'canHire',
+  categoryId: 'categoryId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.OrderScalarFieldEnum = {
+  id: 'id',
+  orderNumber: 'orderNumber',
+  customerId: 'customerId',
+  status: 'status',
+  stage: 'stage',
+  totalAmount: 'totalAmount',
+  shippingAmount: 'shippingAmount',
+  taxAmount: 'taxAmount',
+  discountAmount: 'discountAmount',
+  finalAmount: 'finalAmount',
+  paymentStatus: 'paymentStatus',
+  shippingAddress: 'shippingAddress',
+  billingAddress: 'billingAddress',
+  staffNotes: 'staffNotes',
+  customerNotes: 'customerNotes',
+  assignedStaffId: 'assignedStaffId',
+  reviewedBy: 'reviewedBy',
+  reviewedAt: 'reviewedAt',
+  shippedAt: 'shippedAt',
+  deliveredAt: 'deliveredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.OrderItemScalarFieldEnum = {
   id: 'id',
   orderId: 'orderId',
@@ -320,6 +298,28 @@ exports.Prisma.OrderStatusHistoryScalarFieldEnum = {
   changedAt: 'changedAt'
 };
 
+exports.Prisma.HeroSettingScalarFieldEnum = {
+  id: 'id',
+  imageUrl: 'imageUrl',
+  title: 'title',
+  description: 'description',
+  buttonText: 'buttonText',
+  buttonLink: 'buttonLink',
+  textPosition: 'textPosition',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProductCategoryScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.ProductOptionScalarFieldEnum = {
   id: 'id',
   productId: 'productId',
@@ -342,31 +342,12 @@ exports.Prisma.ProductOptionValueScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.UserScalarFieldEnum = {
-  id: 'id',
-  email: 'email',
-  firstName: 'firstName',
-  lastName: 'lastName',
-  password: 'password',
-  role: 'role',
-  department: 'department',
-  active: 'active',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.Task_dependenciesScalarFieldEnum = {
-  id: 'id',
-  taskId: 'taskId',
-  dependsOnTaskId: 'dependsOnTaskId',
-  createdAt: 'createdAt'
-};
-
-exports.Prisma.Task_templatesScalarFieldEnum = {
+exports.Prisma.TaskTemplateScalarFieldEnum = {
   id: 'id',
   productId: 'productId',
   name: 'name',
   description: 'description',
+  category: 'category',
   estimatedDuration: 'estimatedDuration',
   leadTimeHours: 'leadTimeHours',
   sequenceOrder: 'sequenceOrder',
@@ -378,11 +359,10 @@ exports.Prisma.Task_templatesScalarFieldEnum = {
   notes: 'notes',
   isActive: 'isActive',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  category: 'category'
+  updatedAt: 'updatedAt'
 };
 
-exports.Prisma.TasksScalarFieldEnum = {
+exports.Prisma.TaskScalarFieldEnum = {
   id: 'id',
   templateId: 'templateId',
   eventId: 'eventId',
@@ -409,13 +389,33 @@ exports.Prisma.TasksScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.User_rolesScalarFieldEnum = {
+exports.Prisma.TaskDependencyScalarFieldEnum = {
+  id: 'id',
+  taskId: 'taskId',
+  dependsOnTaskId: 'dependsOnTaskId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.UserRoleScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   role: 'role',
   department: 'department',
   isPrimary: 'isPrimary',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.UserScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  firstName: 'firstName',
+  lastName: 'lastName',
+  password: 'password',
+  role: 'role',
+  department: 'department',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -470,26 +470,26 @@ exports.TaskPriority = exports.$Enums.TaskPriority = {
 
 exports.Prisma.ModelName = {
   Account: 'Account',
-  Customer: 'Customer',
-  Event: 'Event',
-  HeroSetting: 'HeroSetting',
-  Order: 'Order',
-  Product: 'Product',
   StaffInvitation: 'StaffInvitation',
-  ProductCategory: 'ProductCategory',
+  Event: 'Event',
   EventItem: 'EventItem',
   EventItemOption: 'EventItemOption',
   EventStatusHistory: 'EventStatusHistory',
+  Customer: 'Customer',
+  Product: 'Product',
+  Order: 'Order',
   OrderItem: 'OrderItem',
   OrderItemOption: 'OrderItemOption',
   OrderStatusHistory: 'OrderStatusHistory',
+  HeroSetting: 'HeroSetting',
+  ProductCategory: 'ProductCategory',
   ProductOption: 'ProductOption',
   ProductOptionValue: 'ProductOptionValue',
-  User: 'User',
-  task_dependencies: 'task_dependencies',
-  task_templates: 'task_templates',
-  tasks: 'tasks',
-  user_roles: 'user_roles'
+  TaskTemplate: 'TaskTemplate',
+  Task: 'Task',
+  TaskDependency: 'TaskDependency',
+  UserRole: 'UserRole',
+  User: 'User'
 };
 
 /**

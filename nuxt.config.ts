@@ -27,7 +27,7 @@ export default defineNuxtConfig({
   build: {
     transpile: ['@prisma/client']
   },
-  // Vite configuration for Prisma
+  // Vite configuration for mixed module formats
   vite: {
     define: {
       global: 'globalThis',
@@ -36,6 +36,9 @@ export default defineNuxtConfig({
       alias: {
         '.prisma/client/index-browser': './node_modules/.prisma/client/index-browser.js'
       }
+    },
+    optimizeDeps: {
+      exclude: ['@prisma/client']
     }
   },
   // Server-side rendering options
