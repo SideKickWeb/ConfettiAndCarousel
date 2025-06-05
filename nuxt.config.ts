@@ -1,4 +1,5 @@
 import { defineNuxtConfig } from 'nuxt/config'
+import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -22,6 +23,12 @@ export default defineNuxtConfig({
     rollupConfig: {
       external: ['@prisma/client', '.prisma/client', '.prisma']
     }
+  },
+  // Webpack configuration with Prisma plugin
+  webpack: {
+    plugins: [
+      new PrismaPlugin()
+    ]
   },
   // Server-side rendering options
   ssr: true,
