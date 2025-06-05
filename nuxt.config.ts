@@ -1,5 +1,4 @@
 import { defineNuxtConfig } from 'nuxt/config'
-import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -21,14 +20,23 @@ export default defineNuxtConfig({
       wasm: true
     },
     rollupConfig: {
-      external: ['@prisma/client', '.prisma/client', '.prisma']
+      external: ['@prisma/client']
     }
   },
-  // Webpack configuration with Prisma plugin
-  webpack: {
-    plugins: [
-      new PrismaPlugin()
-    ]
+  // Build configuration for Vercel
+  build: {
+    transpile: ['@prisma/client']
+  },
+  // Vite configuration for Prisma
+  vite: {
+    define: {
+      global: 'globalThis',
+    },
+    resolve: {
+      alias: {
+        '.prisma/client/index-browser': './node_modules/.prisma/client/index-browser.js'
+      }
+    }
   },
   // Server-side rendering options
   ssr: true,

@@ -1,0 +1,382 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../generated/client"
+  moduleFormat  = "esm"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id          String   @id
+  email       String   @unique
+  firstName   String
+  lastName    String
+  password    String
+  role        String
+  accessLevel String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+}
+
+model Customer {
+  id        String   @id
+  email     String   @unique
+  firstName String
+  lastName  String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Event     Event[]
+  Order     Order[]
+}
+
+model Event {
+  id                 String               @id
+  title              String
+  description        String?
+  location           String
+  startDate          DateTime
+  endDate            DateTime?
+  customerId         String?
+  status             String               @default("quote_requested")
+  staffNotes         String?
+  assignedStaffId    String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+  customerNotes      String?
+  depositAmount      Float?
+  depositPaid        Boolean              @default(false)
+  endTime            String?
+  finalPaymentPaid   Boolean              @default(false)
+  reviewedAt         DateTime?
+  reviewedBy         String?
+  stage              String               @default("pending_review")
+  startTime          String
+  totalAmount        Float?
+  Customer           Customer?            @relation(fields: [customerId], references: [id])
+  EventItem          EventItem[]
+  EventStatusHistory EventStatusHistory[]
+  tasks              tasks[]
+}
+
+model HeroSetting {
+  id           String   @id
+  imageUrl     String
+  title        String
+  description  String
+  buttonText   String   @default("Learn More")
+  buttonLink   String   @default("/contact")
+  textPosition String   @default("left")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+}
+
+model Order {
+  id                 String               @id
+  customerId         String
+  totalAmount        Float
+  status             String               @default("pending")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+  assignedStaffId    String?
+  billingAddress     Json?
+  customerNotes      String?
+  deliveredAt        DateTime?
+  discountAmount     Float?               @default(0)
+  finalAmount        Float
+  orderNumber        String               @unique
+  paymentStatus      String               @default("unpaid")
+  reviewedAt         DateTime?
+  reviewedBy         String?
+  shippedAt          DateTime?
+  shippingAddress    Json?
+  shippingAmount     Float?               @default(0)
+  staffNotes         String?
+  stage              String               @default("pending_review")
+  taxAmount          Float?               @default(0)
+  Customer           Customer             @relation(fields: [customerId], references: [id])
+  OrderItem          OrderItem[]
+  OrderStatusHistory OrderStatusHistory[]
+  tasks              tasks[]
+}
+
+model Product {
+  id              String           @id
+  name            String
+  description     String?
+  price           Float
+  imageUrl        String?
+  active          Boolean          @default(true)
+  categoryId      String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime
+  canBuy          Boolean          @default(true)
+  canHire         Boolean          @default(false)
+  hasRangePrice   Boolean          @default(false)
+  hasUnitPrice    Boolean          @default(false)
+  maxPrice        Float?
+  minPrice        Float?
+  minQuantity     Int?
+  unitPrice       Float?
+  unitType        String?
+  EventItem       EventItem[]
+  OrderItem       OrderItem[]
+  ProductCategory ProductCategory? @relation(fields: [categoryId], references: [id])
+  ProductOption   ProductOption[]
+  task_templates  task_templates[]
+  tasks           tasks[]
+}
+
+model StaffInvitation {
+  id          String    @id
+  email       String
+  firstName   String
+  lastName    String
+  role        String
+  accessLevel String
+  token       String    @unique
+  used        Boolean   @default(false)
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+}
+
+model ProductCategory {
+  id          String    @id
+  name        String
+  description String?
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  Product     Product[]
+}
+
+model EventItem {
+  id              String            @id
+  eventId         String
+  productId       String
+  quantity        Int               @default(1)
+  unitPrice       Float?
+  totalPrice      Float?
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  Event           Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  Product         Product           @relation(fields: [productId], references: [id])
+  EventItemOption EventItemOption[]
+}
+
+model EventItemOption {
+  id              String        @id
+  eventItemId     String
+  optionId        String
+  optionName      String
+  value           String
+  label           String?
+  priceAdjustment Float         @default(0)
+  createdAt       DateTime      @default(now())
+  EventItem       EventItem     @relation(fields: [eventItemId], references: [id], onDelete: Cascade)
+  ProductOption   ProductOption @relation(fields: [optionId], references: [id])
+}
+
+model EventStatusHistory {
+  id         String   @id
+  eventId    String
+  fromStatus String?
+  toStatus   String
+  fromStage  String?
+  toStage    String
+  notes      String?
+  changedBy  String?
+  changedAt  DateTime @default(now())
+  Event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model OrderItem {
+  id              String            @id
+  orderId         String
+  productId       String
+  quantity        Int               @default(1)
+  unitPrice       Float
+  totalPrice      Float
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  Order           Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  Product         Product           @relation(fields: [productId], references: [id])
+  OrderItemOption OrderItemOption[]
+}
+
+model OrderItemOption {
+  id              String        @id
+  orderItemId     String
+  optionId        String
+  optionName      String
+  value           String
+  label           String?
+  priceAdjustment Float         @default(0)
+  createdAt       DateTime      @default(now())
+  ProductOption   ProductOption @relation(fields: [optionId], references: [id])
+  OrderItem       OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+}
+
+model OrderStatusHistory {
+  id         String   @id
+  orderId    String
+  fromStatus String?
+  toStatus   String
+  fromStage  String?
+  toStage    String
+  notes      String?
+  changedBy  String?
+  changedAt  DateTime @default(now())
+  Order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model ProductOption {
+  id                 String               @id
+  productId          String
+  name               String
+  type               String
+  required           Boolean              @default(false)
+  sortOrder          Int                  @default(0)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+  EventItemOption    EventItemOption[]
+  OrderItemOption    OrderItemOption[]
+  Product            Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  ProductOptionValue ProductOptionValue[]
+}
+
+model ProductOptionValue {
+  id              String        @id
+  optionId        String
+  value           String
+  label           String?
+  priceAdjustment Float?        @default(0)
+  sortOrder       Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  ProductOption   ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id         String       @id
+  email      String       @unique
+  firstName  String
+  lastName   String
+  password   String
+  role       String       @default("admin")
+  department String?
+  active     Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime
+  tasks      tasks[]
+  user_roles user_roles[]
+}
+
+model task_dependencies {
+  id                                             String   @id
+  taskId                                         String
+  dependsOnTaskId                                String
+  createdAt                                      DateTime @default(now())
+  tasks_task_dependencies_dependsOnTaskIdTotasks tasks    @relation("task_dependencies_dependsOnTaskIdTotasks", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+  tasks_task_dependencies_taskIdTotasks          tasks    @relation("task_dependencies_taskIdTotasks", fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model task_templates {
+  id                           String               @id
+  productId                    String
+  name                         String
+  description                  String?
+  estimatedDuration            Int
+  leadTimeHours                Int                  @default(0)
+  sequenceOrder                Int                  @default(0)
+  requiredRole                 String?
+  triggerCondition             TaskTriggerCondition
+  isMandatory                  Boolean              @default(true)
+  requiresCompletionBeforeNext Boolean              @default(false)
+  autoAssignToRole             String?
+  notes                        String?
+  isActive                     Boolean              @default(true)
+  createdAt                    DateTime             @default(now())
+  updatedAt                    DateTime
+  category                     String?
+  Product                      Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tasks                        tasks[]
+}
+
+model tasks {
+  id                                                         String              @id
+  templateId                                                 String?
+  eventId                                                    String?
+  orderId                                                    String?
+  productId                                                  String?
+  assignedUserId                                             String?
+  name                                                       String
+  description                                                String?
+  category                                                   String?
+  status                                                     TaskStatus          @default(PENDING)
+  priority                                                   TaskPriority        @default(MEDIUM)
+  dueDate                                                    DateTime?
+  startTime                                                  DateTime?
+  endTime                                                    DateTime?
+  estimatedDuration                                          Int?
+  actualDuration                                             Int?
+  actualStartTime                                            DateTime?
+  actualEndTime                                              DateTime?
+  completionNotes                                            String?
+  requiresCustomerApproval                                   Boolean             @default(false)
+  customerApprovedAt                                         DateTime?
+  blockedReason                                              String?
+  createdAt                                                  DateTime            @default(now())
+  updatedAt                                                  DateTime
+  task_dependencies_task_dependencies_dependsOnTaskIdTotasks task_dependencies[] @relation("task_dependencies_dependsOnTaskIdTotasks")
+  task_dependencies_task_dependencies_taskIdTotasks          task_dependencies[] @relation("task_dependencies_taskIdTotasks")
+  User                                                       User?               @relation(fields: [assignedUserId], references: [id])
+  Event                                                      Event?              @relation(fields: [eventId], references: [id])
+  Order                                                      Order?              @relation(fields: [orderId], references: [id])
+  Product                                                    Product?            @relation(fields: [productId], references: [id])
+  task_templates                                             task_templates?     @relation(fields: [templateId], references: [id])
+}
+
+model user_roles {
+  id         String   @id
+  userId     String
+  role       String
+  department String?
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  BLOCKED
+}
+
+enum TaskTriggerCondition {
+  ORDER_CREATED
+  ORDER_CONFIRMED
+  EVENT_CONFIRMED
+  EVENT_PAID
+  DAY_BEFORE
+  DAY_OF
+  AFTER_EVENT
+}

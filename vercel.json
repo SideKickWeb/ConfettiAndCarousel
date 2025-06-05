@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run vercel-build",
+  "buildCommand": "prisma generate && nuxt build",
   "installCommand": "npm ci",
   "env": {
     "PRISMA_CLI_BINARY_TARGETS": "rhel-openssl-3.0.x,native",
@@ -10,5 +10,18 @@
   },
   "regions": ["iad1"],
   "crons": [],
-  "framework": "nuxtjs"
+  "framework": "nuxtjs",
+  "functions": {
+    "**/*.ts": {
+      "runtime": "nodejs18.x"
+    },
+    "**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "build": {
+    "env": {
+      "PRISMA_GENERATE_SKIP_AUTOINSTALL": "true"
+    }
+  }
 } 
