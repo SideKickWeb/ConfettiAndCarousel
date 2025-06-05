@@ -7,16 +7,7 @@
     "SKIP_ENV_VALIDATION": "1"
   },
   "regions": ["iad1"],
-  "crons": [],
   "framework": "nuxtjs",
-  "functions": {
-    "**/*.ts": {
-      "runtime": "@vercel/node@3.0.7"
-    },
-    "**/*.js": {
-      "runtime": "@vercel/node@3.0.7"
-    }
-  },
   "build": {
     "env": {
       "PRISMA_GENERATE_SKIP_AUTOINSTALL": "true"
