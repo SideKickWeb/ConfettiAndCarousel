@@ -5,7 +5,7 @@
 <style>
 :root {
   /* Light theme */
-  --bg-primary: #fffdf5;
+  --bg-primary: #fffdf4;
   --bg-secondary: #fff;
   --text-primary: #333;
   --text-secondary: #666;
