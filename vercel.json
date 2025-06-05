@@ -1,16 +1,24 @@
 {
   "buildCommand": "prisma generate && nuxt build",
-  "installCommand": "npm ci",
+  "installCommand": "npm install",
+  "devCommand": "nuxt dev",
   "env": {
     "PRISMA_CLI_BINARY_TARGETS": "linux-musl,native",
     "NODE_ENV": "production",
-    "SKIP_ENV_VALIDATION": "1"
+    "SKIP_ENV_VALIDATION": "1",
+    "PRISMA_CLI_QUERY_ENGINE_TYPE": "binary",
+    "PRISMA_QUERY_ENGINE_BINARY": "./node_modules/.prisma/client/libquery_engine-debian-openssl-1.1.x.so.node"
   },
   "regions": ["iad1"],
   "framework": "nuxtjs",
   "build": {
     "env": {
       "PRISMA_GENERATE_SKIP_AUTOINSTALL": "true"
+    }
+  },
+  "functions": {
+    "server/api/**": {
+      "maxDuration": 30
     }
   }
 } 

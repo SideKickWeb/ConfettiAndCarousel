@@ -18,6 +18,9 @@ export default defineNuxtConfig({
     preset: 'vercel',
     experimental: {
       wasm: true
+    },
+    externals: {
+      inline: ['@prisma/client']
     }
   },
   // Build configuration for Vercel

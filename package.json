@@ -8,7 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && nuxt build"
+    "vercel-build": "nuxt build"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.5.1",
