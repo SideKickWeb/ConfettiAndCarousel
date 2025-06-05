@@ -8,9 +8,8 @@ export async function getPrismaClient(): Promise<any> {
   }
 
   try {
-    // Dynamic import to avoid build-time bundling issues
-    const prismaModule = await import('@prisma/client')
-    const { PrismaClient } = prismaModule
+    // Import from the generated TypeScript client
+    const { PrismaClient } = await import('../generated/client')
     
     cachedPrismaClient = new PrismaClient({
       log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],

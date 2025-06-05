@@ -18,27 +18,19 @@ export default defineNuxtConfig({
     preset: 'vercel',
     experimental: {
       wasm: true
-    },
-    rollupConfig: {
-      external: ['@prisma/client']
     }
   },
   // Build configuration for Vercel
   build: {
-    transpile: ['@prisma/client']
+    transpile: ['../generated/client']
   },
   // Vite configuration for mixed module formats
   vite: {
     define: {
       global: 'globalThis',
     },
-    resolve: {
-      alias: {
-        '.prisma/client/index-browser': './node_modules/.prisma/client/index-browser.js'
-      }
-    },
     optimizeDeps: {
-      exclude: ['@prisma/client']
+      exclude: ['../generated/client']
     }
   },
   // Server-side rendering options
